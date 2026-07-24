@@ -972,12 +972,14 @@ function renderPlay() {
   const remainingPct = Math.max(0, 100 - dealtPct);
   const cutReservePct = 100 * (TOTAL_CARDS - play.cutPosition) / TOTAL_CARDS;
   elements.shoeDealt.style.height = `${Math.min(100, dealtPct)}%`;
-  elements.shoeCut.style.top = `${cutReservePct}%`;
+  elements.shoeCut.style.top = `${Math.min(99, dealtPct + cutReservePct)}%`;
   elements.shoeRemaining.style.top = "auto";
   elements.shoeRemaining.style.height = `calc(${remainingPct}% - 8px)`;
   elements.shoeText.textContent = `${TOTAL_CARDS - play.shoePosition} left`;
 
-  const delta = Math.round((play.optimalBalance - play.balance) * 10) / 10;
+  const actualHistoryValue = play.balanceHistory[play.balanceHistory.length - 1] ?? 0;
+  const optimalHistoryValue = play.optimalBalanceHistory[play.optimalBalanceHistory.length - 1] ?? actualHistoryValue;
+  const delta = Math.round((optimalHistoryValue - actualHistoryValue) * 10) / 10;
   elements.playChartSummary.textContent = `${play.completedRounds} completed ${play.completedRounds === 1 ? "hand" : "hands"}`;
   elements.playDeltaSummary.textContent = `Optimal − you: ${deltaLabel(delta)}`;
   elements.playDeltaSummary.classList.toggle("ahead", delta > 0);
@@ -1073,7 +1075,7 @@ function answerChallenge(action) {
 function renderChallengeSummary() {
   const c = state.challenge;
   const percent = 100 * c.correct / 200;
-  const passed = c.correct >= 190;
+  const passed = c.correct >= 196;
   elements.challengeGame.classList.add("hidden");
   elements.challengeSummary.classList.remove("hidden");
   const today = new Intl.DateTimeFormat(undefined, { year:"numeric", month:"long", day:"numeric" }).format(new Date());

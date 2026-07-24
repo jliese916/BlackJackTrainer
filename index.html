@@ -90,6 +90,19 @@
         </div>
 
         <div class="table-layout">
+          <aside class="table-left-rail" aria-label="Six-deck shoe">
+            <div class="vertical-shoe-card">
+              <div class="vertical-shoe-title">SIX-DECK SHOE</div>
+              <div class="vertical-shoe-graphic" aria-label="Shoe penetration graphic">
+                <div id="shoeRemaining" class="shoe-remaining"></div>
+                <div id="shoeCut" class="shoe-cut" title="Cut card"></div>
+                <div id="shoeDealt" class="shoe-dealt"></div>
+              </div>
+              <small id="shoeText">312 left</small>
+              <div class="shoe-legend"><span class="yellow-mark"></span> Cut</div>
+            </div>
+          </aside>
+
           <div class="table-main">
             <div class="dealer-zone play-zone">
               <div class="zone-label light">Dealer</div>
@@ -102,18 +115,7 @@
             <button id="dealButton" class="deal-button" type="button">Deal</button>
           </div>
 
-          <div id="playActions" class="play-actions play-actions-rail" aria-label="Player actions"></div>
-
-          <aside class="vertical-shoe-card" aria-label="Six-deck shoe">
-            <div class="vertical-shoe-title">SIX-DECK SHOE</div>
-            <div class="vertical-shoe-graphic" aria-label="Shoe penetration graphic">
-              <div id="shoeRemaining" class="shoe-remaining"></div>
-              <div id="shoeCut" class="shoe-cut" title="Cut card"></div>
-              <div id="shoeDealt" class="shoe-dealt"></div>
-            </div>
-            <small id="shoeText">312 left</small>
-            <div class="shoe-legend"><span class="yellow-mark"></span> Cut</div>
-          </aside>
+          <aside id="playActions" class="blackjack-actions play-actions play-actions-rail" aria-label="Player actions"></aside>
         </div>
       </div>
 
@@ -126,7 +128,7 @@
           <span><i class="legend-line legend-actual"></i>Your play</span>
           <span><i class="legend-line legend-optimal"></i>Optimal play</span>
         </div>
-        <div id="playDeltaSummary" class="chart-delta-pill">Optimal - you: 0 units</div>
+        <div id="playDeltaSummary" class="chart-delta-pill">Optimal − you: 0 units</div>
         <canvas id="playBalanceChart" class="balance-chart" width="640" height="175"></canvas>
       </div>
 
@@ -145,7 +147,7 @@
           </div>
           <button id="challengeExit" class="challenge-exit" type="button">Exit</button>
         </div>
-        <p>No feedback until the final score.</p>
+        <p>No feedback until the final score. You need 196 correct answers (98%) to pass.</p>
         <div class="practice-table">
           <div class="dealer-zone">
             <div class="zone-label">Dealer</div>

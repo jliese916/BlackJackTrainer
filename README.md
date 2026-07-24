@@ -7,7 +7,7 @@ A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript
 - **Train:** first-decision basic-strategy practice with score and percentage.
 - **Look Up:** select a dealer card, then tap two player cards into outlined card slots.
 - **Play:** full blackjack hands using a persistent six-deck shoe.
-- **El Jefe Challenge:** 200 silent-scored decisions; 95% is required to pass.
+- **El Jefe Challenge:** 200 silent-scored decisions; 196 correct answers (98%) are required to pass.
 
 ## Rule profile
 
@@ -63,9 +63,12 @@ This works when both projects are GitHub Pages repositories under the same
 GitHub username and the video-poker repository is named
 `jacks-or-better-trainer`.
 
-## Version 3 changes
+## Version 4 changes
 
-- Play actions now occupy a fixed vertical rail beside the table, so showing or hiding Hit, Stand, Double, and Split does not resize the central play area.
+- The six-deck shoe is on the left, the player-action rail is on the right, and dealer/player cards stay centered in the middle.
 - Removed the Mandalay Bay affiliation disclaimer from the Play screen.
-- The vertical shoe is bottom-justified: used-card space grows from the top, and the cut-card marker begins in the upper 10–20% of the graphic.
+- The vertical shoe is bottom-justified: used-card space grows from the top, and the cut-card marker slides downward with the remaining stack.
 - The strategy profile links directly to the Wizard of Odds chart used by the trainer.
+
+- The El Jefe Challenge now requires 196 of 200 correct decisions (98%) to pass.
+- Service-worker cache: `el-jefe-blackjack-v4`.
