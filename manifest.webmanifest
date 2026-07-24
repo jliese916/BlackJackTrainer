@@ -1,0 +1,14 @@
+{
+  "name": "El Jefe's Blackjack Trainer",
+  "short_name": "El Jefe BJ",
+  "description": "Blackjack training, lookup, challenge, and six-deck play simulator.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e8edf5",
+  "theme_color": "#0f172a",
+  "icons": [
+    {"src":"./icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"./icon-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}
