@@ -22,10 +22,12 @@ const elements = {
   trainPercent: $("#trainPercent"),
   resetTrainScore: $("#resetTrainScore"),
   lookupPanel: $("#lookupPanel"),
-  lookupDealerPicker: $("#lookupDealerPicker"),
-  lookupPlayerOnePicker: $("#lookupPlayerOnePicker"),
-  lookupPlayerTwoPicker: $("#lookupPlayerTwoPicker"),
-  lookupPreview: $("#lookupPreview"),
+  lookupDealerTarget: $("#lookupDealerTarget"),
+  lookupPlayerTarget: $("#lookupPlayerTarget"),
+  lookupDealerSlot: $("#lookupDealerSlot"),
+  lookupPlayerSlots: $("#lookupPlayerSlots"),
+  lookupPickerLabel: $("#lookupPickerLabel"),
+  lookupRankPicker: $("#lookupRankPicker"),
   lookupResult: $("#lookupResult"),
   lookupClear: $("#lookupClear"),
   playPanel: $("#playPanel"),
@@ -40,6 +42,9 @@ const elements = {
   shoeRemaining: $("#shoeRemaining"),
   shoeCut: $("#shoeCut"),
   shoeDealt: $("#shoeDealt"),
+  playChartSummary: $("#playChartSummary"),
+  playDeltaSummary: $("#playDeltaSummary"),
+  playBalanceChart: $("#playBalanceChart"),
   resetPlay: $("#resetPlay"),
   challengeLaunch: $("#challengeLaunch"),
   challengePanel: $("#challengePanel"),
@@ -60,7 +65,7 @@ const state = {
     attempts: Number(localStorage.getItem("blackjackTrainAttempts") || 0),
     correct: Number(localStorage.getItem("blackjackTrainCorrect") || 0)
   },
-  lookup: { dealer: null, first: null, second: null },
+  lookup: { dealer:null, player:[], target:"dealer" },
   play: loadPlaySession(),
   challenge: { active:false, number:1, correct:0, scenario:null, finished:false }
 };
@@ -282,47 +287,75 @@ function answerTrain(action) {
   renderTrain();
 }
 
-function buildRankPicker(container, field) {
-  container.replaceChildren();
+function lookupPlaceholder() {
+  const slot = document.createElement("span");
+  slot.className = "lookup-card-placeholder";
+  return slot;
+}
+
+function renderLookupSlots() {
+  elements.lookupDealerSlot.replaceChildren();
+  elements.lookupPlayerSlots.replaceChildren();
+
+  if (state.lookup.dealer === null) {
+    elements.lookupDealerSlot.append(lookupPlaceholder());
+  } else {
+    elements.lookupDealerSlot.append(cardElement(cardFromRank(state.lookup.dealer, 3), { small:true }));
+  }
+
+  for (let index = 0; index < 2; index += 1) {
+    const rank = state.lookup.player[index];
+    if (rank === undefined) {
+      elements.lookupPlayerSlots.append(lookupPlaceholder());
+    } else {
+      const suit = index === 0 ? 0 : (rank === state.lookup.player[0] ? 1 : 2);
+      elements.lookupPlayerSlots.append(cardElement(cardFromRank(rank, suit), { small:true }));
+    }
+  }
+}
+
+function chooseLookupRank(rank) {
+  if (state.lookup.target === "dealer") {
+    state.lookup.dealer = rank;
+    state.lookup.target = "player";
+  } else if (state.lookup.player.length < 2) {
+    state.lookup.player.push(rank);
+  } else {
+    state.lookup.player = [rank];
+  }
+  renderLookup();
+}
+
+function buildLookupRankPicker() {
+  elements.lookupRankPicker.replaceChildren();
   RANKS.forEach((label, rank) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "rank-button";
     button.textContent = label;
-    button.classList.toggle("active", state.lookup[field] === rank);
-    button.addEventListener("click", () => {
-      state.lookup[field] = rank;
-      renderLookup();
-    });
-    container.append(button);
+    button.addEventListener("click", () => chooseLookupRank(rank));
+    elements.lookupRankPicker.append(button);
   });
 }
 
 function renderLookup() {
-  buildRankPicker(elements.lookupDealerPicker, "dealer");
-  buildRankPicker(elements.lookupPlayerOnePicker, "first");
-  buildRankPicker(elements.lookupPlayerTwoPicker, "second");
-  elements.lookupPreview.replaceChildren();
+  elements.lookupDealerTarget.classList.toggle("active", state.lookup.target === "dealer");
+  elements.lookupPlayerTarget.classList.toggle("active", state.lookup.target === "player");
+  elements.lookupPickerLabel.textContent = state.lookup.target === "dealer"
+    ? "Choose dealer card"
+    : state.lookup.player.length < 2
+      ? `Choose player card ${state.lookup.player.length + 1} of 2`
+      : "Player cards complete — tap a rank to start over";
 
-  const dealerGroup = document.createElement("div");
-  dealerGroup.className = "lookup-preview-group";
-  dealerGroup.innerHTML = '<span class="lookup-preview-label">Dealer</span>';
-  if (state.lookup.dealer !== null) dealerGroup.append(cardElement(cardFromRank(state.lookup.dealer, 3), { small:true }));
-  elements.lookupPreview.append(dealerGroup);
+  renderLookupSlots();
+  buildLookupRankPicker();
 
-  const playerGroup = document.createElement("div");
-  playerGroup.className = "lookup-preview-group";
-  playerGroup.innerHTML = '<span class="lookup-preview-label">You</span>';
-  const playerHand = document.createElement("div");
-  playerHand.className = "hand";
-  if (state.lookup.first !== null) playerHand.append(cardElement(cardFromRank(state.lookup.first, 0), { small:true }));
-  if (state.lookup.second !== null) playerHand.append(cardElement(cardFromRank(state.lookup.second, state.lookup.second === state.lookup.first ? 1 : 2), { small:true }));
-  playerGroup.append(playerHand);
-  elements.lookupPreview.append(playerGroup);
-
-  if ([state.lookup.dealer, state.lookup.first, state.lookup.second].every((x) => x !== null)) {
+  if (state.lookup.dealer !== null && state.lookup.player.length === 2) {
     const dealer = cardFromRank(state.lookup.dealer, 3);
-    const player = [cardFromRank(state.lookup.first, 0), cardFromRank(state.lookup.second, state.lookup.second === state.lookup.first ? 1 : 2)];
+    const player = [
+      cardFromRank(state.lookup.player[0], 0),
+      cardFromRank(state.lookup.player[1], state.lookup.player[1] === state.lookup.player[0] ? 1 : 2)
+    ];
     const action = strategyAction(player, dealer);
     const info = handInfo(player);
     elements.lookupResult.textContent = `${info.soft ? "Soft " : ""}${info.total}: ${ACTION_LABELS[action]}`;
@@ -331,10 +364,131 @@ function renderLookup() {
   }
 }
 
+function simulateOptimalRound(initialPlayer, initialDealer, drawPile) {
+  const playerInfo = handInfo(initialPlayer);
+  const dealerInfo = handInfo(initialDealer);
+  if (playerInfo.blackjack || dealerInfo.blackjack) {
+    if (playerInfo.blackjack && dealerInfo.blackjack) return 0;
+    if (dealerInfo.blackjack) return -BASE_WAGER;
+    return 1.2 * BASE_WAGER;
+  }
+
+  let drawPosition = 0;
+  const nextCard = () => {
+    const card = drawPile[drawPosition];
+    drawPosition += 1;
+    if (card === undefined) throw new Error("The shadow shoe ran out of cards.");
+    return card;
+  };
+
+  let net = -BASE_WAGER;
+  const hands = [{
+    cards:[...initialPlayer],
+    bet:BASE_WAGER,
+    status:"active",
+    fromSplit:false,
+    splitAces:false
+  }];
+
+  let handIndex = 0;
+  while (handIndex < hands.length) {
+    const hand = hands[handIndex];
+    if (hand.status !== "active") {
+      handIndex += 1;
+      continue;
+    }
+
+    const info = handInfo(hand.cards);
+    if (info.bust) {
+      hand.status = "bust";
+      handIndex += 1;
+      continue;
+    }
+    if (info.total === 21 || hand.splitAces) {
+      hand.status = "done";
+      handIndex += 1;
+      continue;
+    }
+
+    const canDouble = hand.cards.length === 2 && !hand.splitAces;
+    const canSplit = hand.cards.length === 2
+      && sameRankPair(hand.cards)
+      && hands.length < 4
+      && !(hand.fromSplit && rankOf(hand.cards[0]) === 12);
+    const action = strategyAction(hand.cards, initialDealer[0], { canDouble, canSplit });
+
+    if (action === "hit") {
+      hand.cards.push(nextCard());
+      continue;
+    }
+
+    if (action === "stand") {
+      hand.status = "done";
+      handIndex += 1;
+      continue;
+    }
+
+    if (action === "double" && canDouble) {
+      net -= hand.bet;
+      hand.bet *= 2;
+      hand.cards.push(nextCard());
+      hand.status = handInfo(hand.cards).bust ? "bust" : "done";
+      handIndex += 1;
+      continue;
+    }
+
+    if (action === "split" && canSplit) {
+      net -= hand.bet;
+      const aceSplit = rankOf(hand.cards[0]) === 12;
+      const first = {
+        cards:[hand.cards[0], nextCard()],
+        bet:hand.bet,
+        status:aceSplit ? "done" : "active",
+        fromSplit:true,
+        splitAces:aceSplit
+      };
+      const second = {
+        cards:[hand.cards[1], nextCard()],
+        bet:hand.bet,
+        status:aceSplit ? "done" : "active",
+        fromSplit:true,
+        splitAces:aceSplit
+      };
+      hands.splice(handIndex, 1, first, second);
+      continue;
+    }
+
+    // This is only reachable if an action is unavailable after a rule limit.
+    hand.cards.push(nextCard());
+  }
+
+  const dealer = [...initialDealer];
+  if (!hands.every((hand) => hand.status === "bust")) {
+    while (true) {
+      const info = handInfo(dealer);
+      if (info.total < 17 || (info.total === 17 && info.soft)) dealer.push(nextCard());
+      else break;
+    }
+  }
+
+  const finalDealer = handInfo(dealer);
+  hands.forEach((hand) => {
+    const player = handInfo(hand.cards);
+    if (player.bust) return;
+    if (finalDealer.bust || player.total > finalDealer.total) net += 2 * hand.bet;
+    else if (player.total === finalDealer.total) net += hand.bet;
+  });
+  return Math.round(net * 10) / 10;
+}
+
 function newPlaySession() {
   const shoe = sixDeckShoe();
   return {
     balance:0,
+    optimalBalance:0,
+    balanceHistory:[0],
+    optimalBalanceHistory:[0],
+    completedRounds:0,
     shoe,
     shoePosition:0,
     cutPosition:Math.floor(TOTAL_CARDS * (0.80 + 0.10 * randomFloat())),
@@ -348,7 +502,28 @@ function loadPlaySession() {
   try {
     const stored = JSON.parse(localStorage.getItem("blackjackPlaySession") || "null");
     if (stored && Array.isArray(stored.shoe) && stored.shoe.length === TOTAL_CARDS && Number.isFinite(stored.shoePosition) && Number.isFinite(stored.cutPosition)) {
-      return { ...stored, round:null, busy:false, message:"" };
+      const balance = Number.isFinite(stored.balance) ? stored.balance : 0;
+      const balanceHistory = Array.isArray(stored.balanceHistory) && stored.balanceHistory.length
+        ? stored.balanceHistory.filter(Number.isFinite)
+        : [balance];
+      const optimalBalance = Number.isFinite(stored.optimalBalance) ? stored.optimalBalance : balance;
+      const optimalBalanceHistory = Array.isArray(stored.optimalBalanceHistory) && stored.optimalBalanceHistory.length
+        ? stored.optimalBalanceHistory.filter(Number.isFinite)
+        : [optimalBalance];
+      const completedRounds = Number.isFinite(stored.completedRounds)
+        ? stored.completedRounds
+        : Math.max(0, Math.min(balanceHistory.length, optimalBalanceHistory.length) - 1);
+      return {
+        ...stored,
+        balance,
+        optimalBalance,
+        balanceHistory:balanceHistory.length ? balanceHistory : [balance],
+        optimalBalanceHistory:optimalBalanceHistory.length ? optimalBalanceHistory : [optimalBalance],
+        completedRounds,
+        round:null,
+        busy:false,
+        message:""
+      };
     }
   } catch (_) {}
   return newPlaySession();
@@ -357,6 +532,10 @@ function loadPlaySession() {
 function savePlaySession() {
   localStorage.setItem("blackjackPlaySession", JSON.stringify({
     balance:state.play.balance,
+    optimalBalance:state.play.optimalBalance,
+    balanceHistory:state.play.balanceHistory,
+    optimalBalanceHistory:state.play.optimalBalanceHistory,
+    completedRounds:state.play.completedRounds,
     shoe:state.play.shoe,
     shoePosition:state.play.shoePosition,
     cutPosition:state.play.cutPosition
@@ -370,7 +549,7 @@ function reshufflePlayShoe() {
 }
 
 function ensureShoe() {
-  if (state.play.shoePosition >= state.play.cutPosition || TOTAL_CARDS - state.play.shoePosition < 60) reshufflePlayShoe();
+  if (state.play.shoePosition >= state.play.cutPosition) reshufflePlayShoe();
 }
 
 function drawCard() {
@@ -391,6 +570,20 @@ function signedUnits(value) {
   return `${prefix}${rounded.toFixed(Number.isInteger(rounded) ? 0 : 1)} ${Math.abs(rounded) === 1 ? "unit" : "units"}`;
 }
 
+function recordCompletedRound() {
+  const round = state.play.round;
+  if (!round || round.historyRecorded) return;
+  const actualNet = Math.round((state.play.balance - round.balanceBefore) * 10) / 10;
+  const optimalNet = Number.isFinite(round.optimalNet) ? round.optimalNet : actualNet;
+  state.play.balance = Math.round(state.play.balance * 10) / 10;
+  state.play.optimalBalance = Math.round((state.play.optimalBalance + optimalNet) * 10) / 10;
+  state.play.balanceHistory.push(state.play.balance);
+  state.play.optimalBalanceHistory.push(state.play.optimalBalance);
+  state.play.completedRounds += 1;
+  round.historyRecorded = true;
+  savePlaySession();
+}
+
 async function dealPlayRound() {
   if (state.play.busy || (state.play.round && state.play.round.stage !== "complete")) return;
   ensureShoe();
@@ -402,7 +595,9 @@ async function dealPlayRound() {
     dealer:[],
     hands:[{ cards:[], bet:BASE_WAGER, status:"active", fromSplit:false, splitAces:false, outcome:"" }],
     activeIndex:0,
-    balanceBefore
+    balanceBefore,
+    optimalNet:null,
+    historyRecorded:false
   };
   state.play.message = "Dealing…";
   renderPlay();
@@ -411,6 +606,16 @@ async function dealPlayRound() {
   state.play.round.dealer.push(drawCard()); renderPlay(); await sleep(150);
   state.play.round.hands[0].cards.push(drawCard()); renderPlay(); await sleep(150);
   state.play.round.dealer.push(drawCard()); renderPlay(); await sleep(170);
+
+  try {
+    state.play.round.optimalNet = simulateOptimalRound(
+      state.play.round.hands[0].cards,
+      state.play.round.dealer,
+      state.play.shoe.slice(state.play.shoePosition)
+    );
+  } catch (error) {
+    console.error("Could not simulate the optimal shadow hand.", error);
+  }
 
   const playerInfo = handInfo(state.play.round.hands[0].cards);
   const dealerInfo = handInfo(state.play.round.dealer);
@@ -441,7 +646,7 @@ function resolveNaturals(playerBlackjack, dealerBlackjack) {
     state.play.message = "Blackjack pays 6:5. You win 1.2 units.";
   }
   state.play.busy = false;
-  savePlaySession();
+  recordCompletedRound();
   renderPlay();
 }
 
@@ -575,19 +780,209 @@ function settleRound() {
   state.play.busy = false;
   const net = state.play.balance - round.balanceBefore;
   state.play.message = `Round complete. Net ${signedUnits(net)}.`;
-  savePlaySession();
+  recordCompletedRound();
   renderPlay();
+}
+
+function deltaLabel(value) {
+  const rounded = Math.round(value * 10) / 10;
+  if (rounded === 0) return "0 units";
+  const number = Math.abs(rounded).toFixed(Number.isInteger(rounded) ? 0 : 1);
+  return `${rounded > 0 ? "+" : "−"}${number} ${Math.abs(rounded) === 1 ? "unit" : "units"}`;
+}
+
+function drawBalanceChart() {
+  const canvas = elements.playBalanceChart;
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return;
+
+  const scale = window.devicePixelRatio || 1;
+  const pixelWidth = Math.max(1, Math.round(rect.width * scale));
+  const pixelHeight = Math.max(1, Math.round(rect.height * scale));
+  if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+    canvas.width = pixelWidth;
+    canvas.height = pixelHeight;
+  }
+
+  const context = canvas.getContext("2d");
+  context.setTransform(scale, 0, 0, scale, 0, 0);
+  context.clearRect(0, 0, rect.width, rect.height);
+
+  const actualValues = state.play.balanceHistory.length ? state.play.balanceHistory : [state.play.balance];
+  const optimalValues = state.play.optimalBalanceHistory.length ? state.play.optimalBalanceHistory : [state.play.optimalBalance];
+  const allValues = [...actualValues, ...optimalValues];
+  const pointCount = Math.max(actualValues.length, optimalValues.length);
+  const padding = { left:10, right:92, top:12, bottom:14 };
+  const chartWidth = Math.max(1, rect.width - padding.left - padding.right);
+  const chartHeight = Math.max(1, rect.height - padding.top - padding.bottom);
+
+  let minimum = Math.min(0, ...allValues);
+  let maximum = Math.max(0, ...allValues);
+  if (minimum === maximum) {
+    minimum -= 2;
+    maximum += 2;
+  } else {
+    const extra = Math.max(0.5, (maximum - minimum) * 0.1);
+    minimum -= extra;
+    maximum += extra;
+  }
+
+  const xFor = index => padding.left + (pointCount === 1 ? 0 : index * chartWidth / (pointCount - 1));
+  const yFor = value => padding.top + (maximum - value) * chartHeight / (maximum - minimum);
+  const zeroY = yFor(0);
+
+  context.save();
+  context.strokeStyle = "rgba(71, 85, 105, .58)";
+  context.lineWidth = 1;
+  context.setLineDash([5, 5]);
+  context.beginPath();
+  context.moveTo(padding.left, zeroY);
+  context.lineTo(rect.width - padding.right, zeroY);
+  context.stroke();
+  context.restore();
+
+  const buildPath = values => {
+    context.beginPath();
+    values.forEach((value, index) => {
+      const x = xFor(index);
+      const y = yFor(value);
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    });
+  };
+
+  if (actualValues.length > 1) {
+    context.save();
+    context.beginPath();
+    context.rect(0, 0, rect.width, Math.max(0, zeroY));
+    context.clip();
+    buildPath(actualValues);
+    context.lineTo(xFor(actualValues.length - 1), zeroY);
+    context.lineTo(xFor(0), zeroY);
+    context.closePath();
+    context.fillStyle = "rgba(22, 163, 74, .11)";
+    context.fill();
+    context.restore();
+
+    context.save();
+    context.beginPath();
+    context.rect(0, zeroY, rect.width, Math.max(0, rect.height - zeroY));
+    context.clip();
+    buildPath(actualValues);
+    context.lineTo(xFor(actualValues.length - 1), zeroY);
+    context.lineTo(xFor(0), zeroY);
+    context.closePath();
+    context.fillStyle = "rgba(220, 38, 38, .10)";
+    context.fill();
+    context.restore();
+
+    const drawClippedLine = (top, bottom, color) => {
+      context.save();
+      context.beginPath();
+      context.rect(0, top, rect.width, Math.max(0, bottom - top));
+      context.clip();
+      buildPath(actualValues);
+      context.strokeStyle = color;
+      context.lineWidth = 2.5;
+      context.lineJoin = "round";
+      context.lineCap = "round";
+      context.stroke();
+      context.restore();
+    };
+    drawClippedLine(0, zeroY, "#15803d");
+    drawClippedLine(zeroY, rect.height, "#dc2626");
+  }
+
+  if (optimalValues.length > 1) {
+    context.save();
+    buildPath(optimalValues);
+    context.strokeStyle = "#64748b";
+    context.lineWidth = 2;
+    context.lineJoin = "round";
+    context.lineCap = "round";
+    context.stroke();
+    context.restore();
+  }
+
+  const actualLast = actualValues[actualValues.length - 1];
+  const optimalLast = optimalValues[optimalValues.length - 1];
+  const actualX = xFor(actualValues.length - 1);
+  const optimalX = xFor(optimalValues.length - 1);
+  const actualY = yFor(actualLast);
+  const optimalY = yFor(optimalLast);
+
+  context.fillStyle = actualLast >= 0 ? "#15803d" : "#dc2626";
+  context.beginPath();
+  context.arc(actualX, actualY, 3.5, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = "#64748b";
+  context.beginPath();
+  context.arc(optimalX, optimalY, 3, 0, Math.PI * 2);
+  context.fill();
+
+  const delta = Math.round((optimalLast - actualLast) * 10) / 10;
+  const label = deltaLabel(delta);
+  const latestX = xFor(pointCount - 1);
+  const topY = Math.min(actualY, optimalY);
+  const bottomY = Math.max(actualY, optimalY);
+  const bracketX = latestX + 12;
+  const labelX = bracketX + 7;
+  const labelY = Math.min(rect.height - 11, Math.max(11, (topY + bottomY) / 2));
+
+  context.save();
+  context.strokeStyle = "rgba(71, 85, 105, .9)";
+  context.fillStyle = "#334155";
+  context.lineWidth = 1.4;
+  context.lineCap = "round";
+  if (Math.abs(actualY - optimalY) < 2.5) {
+    context.beginPath();
+    context.moveTo(bracketX - 4, actualY);
+    context.lineTo(bracketX + 4, actualY);
+    context.stroke();
+  } else {
+    context.beginPath();
+    context.moveTo(bracketX, topY);
+    context.lineTo(bracketX, bottomY);
+    context.moveTo(bracketX - 4, topY);
+    context.lineTo(bracketX + 4, topY);
+    context.moveTo(bracketX - 4, bottomY);
+    context.lineTo(bracketX + 4, bottomY);
+    context.stroke();
+  }
+  context.font = '700 10px system-ui, -apple-system, "Segoe UI", sans-serif';
+  context.textAlign = "left";
+  context.textBaseline = "middle";
+  context.fillText(label, labelX, labelY);
+  context.restore();
+
+  canvas.setAttribute(
+    "aria-label",
+    `Line chart comparing your blackjack balance with optimal play. Current optimal-minus-you difference: ${label}.`
+  );
 }
 
 function renderPlay() {
   const play = state.play;
   elements.playBalance.textContent = formatUnits(play.balance);
+  elements.playBalance.classList.toggle("positive", play.balance > 0);
+  elements.playBalance.classList.toggle("negative", play.balance < 0);
+
   const dealtPct = 100 * play.shoePosition / TOTAL_CARDS;
-  const cutPct = 100 * play.cutPosition / TOTAL_CARDS;
-  elements.shoeDealt.style.width = `${Math.min(100, dealtPct)}%`;
-  elements.shoeCut.style.left = `${cutPct}%`;
-  elements.shoeRemaining.style.left = `calc(${Math.min(100, dealtPct)}% + 4px)`;
-  elements.shoeText.textContent = `${TOTAL_CARDS - play.shoePosition} cards remain`;
+  const remainingPct = Math.max(0, 100 - dealtPct);
+  const cutReservePct = 100 * (TOTAL_CARDS - play.cutPosition) / TOTAL_CARDS;
+  elements.shoeDealt.style.height = `${Math.min(100, dealtPct)}%`;
+  elements.shoeCut.style.top = `${cutReservePct}%`;
+  elements.shoeRemaining.style.top = "auto";
+  elements.shoeRemaining.style.height = `calc(${remainingPct}% - 8px)`;
+  elements.shoeText.textContent = `${TOTAL_CARDS - play.shoePosition} left`;
+
+  const delta = Math.round((play.optimalBalance - play.balance) * 10) / 10;
+  elements.playChartSummary.textContent = `${play.completedRounds} completed ${play.completedRounds === 1 ? "hand" : "hands"}`;
+  elements.playDeltaSummary.textContent = `Optimal − you: ${deltaLabel(delta)}`;
+  elements.playDeltaSummary.classList.toggle("ahead", delta > 0);
+  elements.playDeltaSummary.classList.toggle("behind", delta < 0);
+  window.requestAnimationFrame(drawBalanceChart);
 
   elements.playDealer.replaceChildren();
   elements.playHands.replaceChildren();
@@ -727,19 +1122,36 @@ elements.resetTrainScore.addEventListener("click", () => {
   localStorage.setItem("blackjackTrainCorrect", "0");
   renderTrain();
 });
+elements.lookupDealerTarget.addEventListener("click", () => {
+  state.lookup.target = "dealer";
+  renderLookup();
+});
+elements.lookupPlayerTarget.addEventListener("click", () => {
+  state.lookup.target = "player";
+  renderLookup();
+});
 elements.lookupClear.addEventListener("click", () => {
-  state.lookup = { dealer:null, first:null, second:null };
+  state.lookup = { dealer:null, player:[], target:"dealer" };
   renderLookup();
 });
 elements.dealButton.addEventListener("click", dealPlayRound);
 elements.resetPlay.addEventListener("click", () => {
-  if (!confirm("Reset the balance to zero and shuffle a fresh six-deck shoe?")) return;
+  if (!confirm("Reset the balance, graph, and six-deck shoe?")) return;
   state.play = newPlaySession();
   savePlaySession();
   renderPlay();
 });
 elements.challengeLaunch.addEventListener("click", startChallenge);
 elements.challengeExit.addEventListener("click", exitChallenge);
+window.addEventListener("resize", () => {
+  if (state.mode === "play") window.requestAnimationFrame(drawBalanceChart);
+});
+if ("ResizeObserver" in window) {
+  const chartObserver = new ResizeObserver(() => {
+    if (state.mode === "play") window.requestAnimationFrame(drawBalanceChart);
+  });
+  chartObserver.observe(elements.playBalanceChart);
+}
 
 newTrainHand();
 renderLookup();

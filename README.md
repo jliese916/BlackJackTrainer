@@ -5,7 +5,7 @@ A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript
 ## Modes
 
 - **Train:** first-decision basic-strategy practice with score and percentage.
-- **Look Up:** choose the dealer upcard and the player's two ranks.
+- **Look Up:** select a dealer card, then tap two player cards into outlined card slots.
 - **Play:** full blackjack hands using a persistent six-deck shoe.
 - **El Jefe Challenge:** 200 silent-scored decisions; 95% is required to pass.
 
@@ -24,7 +24,19 @@ A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript
 - One-unit base wager in Play mode
 - Cut card randomized between 80% and 90% penetration
 
-The basic strategy follows the 4-to-8-deck H17, DAS, no-surrender profile.
+The basic strategy follows the [Wizard of Odds 4-to-8-deck chart](https://wizardofodds.com/games/blackjack/strategy/4-decks/) using the H17, DAS, no-surrender profile.
+
+## Play graph
+
+Play mode tracks two cumulative balances:
+
+- **Your play:** green above zero and red below zero.
+- **Optimal play:** a gray counterfactual line.
+
+For each completed round, the app clones the remaining card order immediately
+after the initial deal and plays that one round using basic strategy. The shadow
+round does not consume cards from the real shoe or affect later deals. The graph
+shows the current `Optimal - you` delta with a bracket at the latest point.
 
 ## Test on Windows
 
@@ -51,8 +63,9 @@ This works when both projects are GitHub Pages repositories under the same
 GitHub username and the video-poker repository is named
 `jacks-or-better-trainer`.
 
-## Branding note
+## Version 3 changes
 
-The Play screen uses a Mandalay Bay-inspired table treatment and text wordmark.
-It is an unofficial practice tool and is not affiliated with Mandalay Bay or
-MGM Resorts.
+- Play actions now occupy a fixed vertical rail beside the table, so showing or hiding Hit, Stand, Double, and Split does not resize the central play area.
+- Removed the Mandalay Bay affiliation disclaimer from the Play screen.
+- The vertical shoe is bottom-justified: used-card space grows from the top, and the cut-card marker begins in the upper 10–20% of the graphic.
+- The strategy profile links directly to the Wizard of Odds chart used by the trainer.

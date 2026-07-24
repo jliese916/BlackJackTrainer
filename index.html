@@ -59,23 +59,22 @@
 
     <section id="lookupPanel" class="panel hidden">
       <p>Choose the dealer's upcard and your two cards.</p>
-      <div class="lookup-grid">
-        <div class="lookup-column">
-          <div class="picker-label">Dealer upcard</div>
-          <div id="lookupDealerPicker" class="rank-picker"></div>
+      <div class="lookup-entry">
+        <div class="lookup-targets">
+          <button id="lookupDealerTarget" class="lookup-target active" type="button">
+            <span class="lookup-target-label">Dealer card</span>
+            <span id="lookupDealerSlot" class="lookup-card-slots"></span>
+          </button>
+          <button id="lookupPlayerTarget" class="lookup-target" type="button">
+            <span class="lookup-target-label">Player cards</span>
+            <span id="lookupPlayerSlots" class="lookup-card-slots"></span>
+          </button>
         </div>
-        <div class="lookup-column">
-          <div class="picker-label">Your first card</div>
-          <div id="lookupPlayerOnePicker" class="rank-picker"></div>
-        </div>
-        <div class="lookup-column">
-          <div class="picker-label">Your second card</div>
-          <div id="lookupPlayerTwoPicker" class="rank-picker"></div>
-        </div>
+        <div id="lookupPickerLabel" class="picker-label lookup-picker-label">Choose dealer card</div>
+        <div id="lookupRankPicker" class="rank-picker"></div>
       </div>
-      <div id="lookupPreview" class="lookup-preview"></div>
       <div id="lookupResult" class="lookup-result" aria-live="polite"></div>
-      <button id="lookupClear" class="secondary-button" type="button">Clear</button>
+      <button id="lookupClear" class="secondary-button" type="button">Clear cards</button>
     </section>
 
     <section id="playPanel" class="panel play-panel hidden">
@@ -90,37 +89,51 @@
           <div><small>Wager</small><strong>1 unit</strong></div>
         </div>
 
-        <div class="dealer-zone play-zone">
-          <div class="zone-label light">Dealer</div>
-          <div id="playDealer" class="hand"></div>
-          <div id="dealerTotal" class="table-total"></div>
-        </div>
+        <div class="table-layout">
+          <div class="table-main">
+            <div class="dealer-zone play-zone">
+              <div class="zone-label light">Dealer</div>
+              <div id="playDealer" class="hand"></div>
+              <div id="dealerTotal" class="table-total"></div>
+            </div>
 
-        <div id="playHands" class="player-hands"></div>
-        <div id="playActions" class="blackjack-actions play-actions"></div>
-        <div id="playMessage" class="play-message" aria-live="polite"></div>
-        <button id="dealButton" class="deal-button" type="button">Deal</button>
+            <div id="playHands" class="player-hands"></div>
+            <div id="playMessage" class="play-message" aria-live="polite"></div>
+            <button id="dealButton" class="deal-button" type="button">Deal</button>
+          </div>
+
+          <div id="playActions" class="play-actions play-actions-rail" aria-label="Player actions"></div>
+
+          <aside class="vertical-shoe-card" aria-label="Six-deck shoe">
+            <div class="vertical-shoe-title">SIX-DECK SHOE</div>
+            <div class="vertical-shoe-graphic" aria-label="Shoe penetration graphic">
+              <div id="shoeRemaining" class="shoe-remaining"></div>
+              <div id="shoeCut" class="shoe-cut" title="Cut card"></div>
+              <div id="shoeDealt" class="shoe-dealt"></div>
+            </div>
+            <small id="shoeText">312 left</small>
+            <div class="shoe-legend"><span class="yellow-mark"></span> Cut</div>
+          </aside>
+        </div>
       </div>
 
-      <div class="shoe-card">
-        <div class="shoe-heading">
-          <span>Six-deck shoe</span>
-          <small id="shoeText">312 cards ready</small>
+      <div class="balance-chart-card">
+        <div class="balance-chart-heading">
+          <span>Bankroll history</span>
+          <small id="playChartSummary">0 completed hands</small>
         </div>
-        <div class="shoe-graphic" aria-label="Shoe penetration graphic">
-          <div id="shoeRemaining" class="shoe-remaining"></div>
-          <div id="shoeCut" class="shoe-cut" title="Cut card"></div>
-          <div id="shoeDealt" class="shoe-dealt"></div>
+        <div class="balance-chart-legend">
+          <span><i class="legend-line legend-actual"></i>Your play</span>
+          <span><i class="legend-line legend-optimal"></i>Optimal play</span>
         </div>
-        <div class="shoe-legend"><span class="yellow-mark"></span> Cut card</div>
+        <div id="playDeltaSummary" class="chart-delta-pill">Optimal - you: 0 units</div>
+        <canvas id="playBalanceChart" class="balance-chart" width="640" height="175"></canvas>
       </div>
 
       <details class="play-settings">
         <summary>Session controls</summary>
         <button id="resetPlay" class="danger-link" type="button">Reset balance and reshuffle</button>
       </details>
-
-      <p class="unofficial-note">Unofficial practice tool. Not affiliated with Mandalay Bay or MGM Resorts.</p>
     </section>
 
     <section id="challengePanel" class="panel challenge-panel hidden">
@@ -150,7 +163,7 @@
 
     <footer>
       <a class="footer-link" href="../jacks-or-better-trainer/">Open El Jefe's Jacks or Better Trainer</a>
-      <p>Strategy profile: 4–8 decks, H17, DAS, no surrender, dealer peek.</p>
+      <p>Strategy profile: <a class="footer-link" href="https://wizardofodds.com/games/blackjack/strategy/4-decks/" target="_blank" rel="noopener noreferrer">Wizard of Odds 4-8 deck chart</a> - H17, DAS, no surrender, dealer peek.</p>
     </footer>
   </main>
 
