@@ -74,4 +74,9 @@ GitHub username and the video-poker repository is named
 - Play mode now tracks the percentage of correct basic-strategy decisions across hits, stands, doubles, and splits.
 - A green `+` or red `−` pulses beside the Play accuracy after each decision.
 - Play accuracy persists locally and resets with Session controls.
-- Service-worker cache: `el-jefe-blackjack-v6`.
+- Service-worker cache: `el-jefe-blackjack-v7`.
+
+
+## Challenge review
+
+After a 200-hand challenge, select **See missed hands** to review the dealer upcard, player cards, chosen decision, and correct decision for every mistake.

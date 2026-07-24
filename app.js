@@ -52,6 +52,7 @@ const elements = {
   challengePanel: $("#challengePanel"),
   challengeGame: $("#challengeGame"),
   challengeSummary: $("#challengeSummary"),
+  challengeReview: $("#challengeReview"),
   challengeProgress: $("#challengeProgress"),
   challengeDealer: $("#challengeDealer"),
   challengePlayer: $("#challengePlayer"),
@@ -69,7 +70,7 @@ const state = {
   },
   lookup: { dealer:null, player:[], target:"dealer" },
   play: loadPlaySession(),
-  challenge: { active:false, number:1, correct:0, scenario:null, finished:false }
+  challenge: { active:false, number:1, correct:0, scenario:null, finished:false, misses:[] }
 };
 
 function randomUint(maxExclusive) {
@@ -1093,7 +1094,7 @@ function renderPlay() {
 }
 
 function startChallenge() {
-  state.challenge = { active:true, number:1, correct:0, scenario:scenarioFromFreshShoe(), finished:false };
+  state.challenge = { active:true, number:1, correct:0, scenario:scenarioFromFreshShoe(), finished:false, misses:[] };
   elements.modeTabs.classList.add("hidden");
   elements.challengeLaunch.classList.add("hidden");
   elements.trainPanel.classList.add("hidden");
@@ -1103,6 +1104,7 @@ function startChallenge() {
   elements.challengePanel.classList.remove("hidden");
   elements.challengeGame.classList.remove("hidden");
   elements.challengeSummary.classList.add("hidden");
+  elements.challengeReview.classList.add("hidden");
   renderChallenge();
 }
 
@@ -1119,7 +1121,17 @@ function answerChallenge(action) {
   const c = state.challenge;
   if (!c.active || c.finished) return;
   const correctAction = strategyAction(c.scenario.player, c.scenario.dealer[0]);
-  if (action === correctAction) c.correct += 1;
+  if (action === correctAction) {
+    c.correct += 1;
+  } else {
+    c.misses.push({
+      handNumber: c.number,
+      dealerUp: c.scenario.dealer[0],
+      player: [...c.scenario.player],
+      chosen: action,
+      correct: correctAction
+    });
+  }
   if (c.number >= 200) {
     c.finished = true;
     renderChallengeSummary();
@@ -1148,6 +1160,7 @@ function renderChallengeSummary() {
       <p>${today}</p>
       <div class="certificate-share">Screenshot this certificate and send it to the group text thread.</div>
     </div>
+    <button class="challenge-review-link" id="challengeReviewLink" type="button">See missed hands (${c.misses.length})</button>
     <div class="challenge-summary-actions">
       <button class="primary" id="challengeAgain">Try Again</button>
       <button id="challengeDone">Done</button>
@@ -1157,17 +1170,107 @@ function renderChallengeSummary() {
       <div class="challenge-final-score">${c.correct} / 200 · ${percent.toFixed(1)}%</div>
       <p>You are not quite ready to put money on a blackjack table. Practice the weak spots and try the challenge again.</p>
     </div>
+    <button class="challenge-review-link" id="challengeReviewLink" type="button">See missed hands (${c.misses.length})</button>
     <div class="challenge-summary-actions">
       <button class="primary" id="challengeAgain">Try Again</button>
       <button id="challengeDone">Done</button>
     </div>`;
   $("#challengeAgain").addEventListener("click", startChallenge);
   $("#challengeDone").addEventListener("click", exitChallenge);
+  $("#challengeReviewLink").addEventListener("click", showChallengeReview);
+}
+
+function blackjackHandDescription(cards) {
+  const info = handInfo(cards);
+  if (sameRankPair(cards)) return `Pair of ${RANKS[rankOf(cards[0])]}s`;
+  return `${info.soft ? "Soft " : ""}${info.total}`;
+}
+
+function renderChallengeReview() {
+  const c = state.challenge;
+  elements.challengeReview.replaceChildren();
+
+  const headingRow = document.createElement("div");
+  headingRow.className = "challenge-review-heading";
+  const headingText = document.createElement("div");
+  headingText.innerHTML = `<div class="challenge-kicker">EL JEFE CHALLENGE</div><h2>Missed hands</h2>`;
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "challenge-exit";
+  back.textContent = "Back to results";
+  back.addEventListener("click", () => {
+    elements.challengeReview.classList.add("hidden");
+    elements.challengeSummary.classList.remove("hidden");
+  });
+  headingRow.append(headingText, back);
+  elements.challengeReview.append(headingRow);
+
+  const intro = document.createElement("p");
+  intro.className = "challenge-review-intro";
+  intro.textContent = c.misses.length
+    ? `${c.misses.length} decision${c.misses.length === 1 ? "" : "s"} to review.`
+    : "Perfect challenge. There were no missed hands.";
+  elements.challengeReview.append(intro);
+
+  if (!c.misses.length) return;
+
+  const list = document.createElement("div");
+  list.className = "missed-hand-list";
+
+  c.misses.forEach((miss) => {
+    const item = document.createElement("article");
+    item.className = "missed-hand-card";
+
+    const number = document.createElement("div");
+    number.className = "missed-hand-number";
+    number.textContent = `Hand ${miss.handNumber}`;
+
+    const table = document.createElement("div");
+    table.className = "missed-blackjack-table";
+
+    const dealer = document.createElement("div");
+    dealer.className = "missed-card-group";
+    dealer.innerHTML = '<div class="missed-card-label">Dealer</div>';
+    const dealerCards = document.createElement("div");
+    dealerCards.className = "mini-review-hand";
+    dealerCards.append(cardElement(miss.dealerUp, { small:true }));
+    dealerCards.append(cardElement(0, { small:true, back:true }));
+    dealer.append(dealerCards);
+
+    const player = document.createElement("div");
+    player.className = "missed-card-group";
+    player.innerHTML = `<div class="missed-card-label">You · ${blackjackHandDescription(miss.player)}</div>`;
+    const playerCards = document.createElement("div");
+    playerCards.className = "mini-review-hand";
+    miss.player.forEach((card) => playerCards.append(cardElement(card, { small:true })));
+    player.append(playerCards);
+
+    table.append(dealer, player);
+
+    const decisions = document.createElement("div");
+    decisions.className = "missed-decision-grid";
+    decisions.innerHTML = `
+      <div><span>Your decision</span><strong class="incorrect-decision">${ACTION_LABELS[miss.chosen]}</strong></div>
+      <div><span>Correct decision</span><strong class="correct-decision">${ACTION_LABELS[miss.correct]}</strong></div>`;
+
+    item.append(number, table, decisions);
+    list.append(item);
+  });
+
+  elements.challengeReview.append(list);
+}
+
+function showChallengeReview() {
+  elements.challengeSummary.classList.add("hidden");
+  elements.challengeReview.classList.remove("hidden");
+  renderChallengeReview();
+  elements.challengeReview.scrollIntoView({ block:"start" });
 }
 
 function exitChallenge() {
   state.challenge.active = false;
   elements.challengePanel.classList.add("hidden");
+  elements.challengeReview.classList.add("hidden");
   elements.modeTabs.classList.remove("hidden");
   elements.challengeLaunch.classList.remove("hidden");
   switchMode(state.mode);
