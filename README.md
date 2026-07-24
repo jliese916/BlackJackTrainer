@@ -57,11 +57,11 @@ GitHub Pages from the `main` branch and `/ (root)` folder.
 
 The footer link uses:
 
-`../jacks-or-better-trainer/`
+`https://jliese916.github.io/JacksOrBetter/`
 
 This works when both projects are GitHub Pages repositories under the same
 GitHub username and the video-poker repository is named
-`jacks-or-better-trainer`.
+`https://jliese916.github.io/JacksOrBetter/`.
 
 ## Version 4 changes
 
