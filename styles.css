@@ -117,8 +117,8 @@ h1{margin:5px 0;font-size:clamp(1.6rem,6vw,2.35rem);letter-spacing:-.035em}
 .mandalay-wordmark small{display:block;margin-top:1px;font-size:.63rem;font-weight:900;letter-spacing:.4em}
 .table-layout{position:relative;z-index:1;display:grid;grid-template-columns:90px minmax(0,1fr) 90px;gap:8px;align-items:start;min-height:390px}
 .table-main{grid-column:2;min-width:0;min-height:390px;display:flex;flex-direction:column;align-items:stretch}
-.play-topline{position:relative;z-index:1;display:flex;justify-content:center;gap:28px;margin:0 auto 10px;color:#fff}
-.play-topline div{display:grid;gap:2px}.play-topline small{color:#d1fae5}.play-topline strong{color:#fff}
+.play-topline{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:min(430px,100%);margin:0 auto 10px;color:#fff}
+.play-topline>div{display:grid;align-content:start;gap:2px;min-width:0}.play-topline small{color:#d1fae5}.play-topline strong{color:#fff}
 .play-topline strong.positive{color:#bbf7d0}.play-topline strong.negative{color:#fecaca}
 .play-zone,.player-hands,.play-actions,.play-message,.deal-button{position:relative;z-index:1}.play-zone{display:grid;justify-items:center}.play-zone .hand{justify-content:center}
 .table-total{min-height:1.2rem;color:#f8fafc;font-weight:850}
@@ -178,3 +178,5 @@ footer{text-align:center;margin:18px auto 0;color:#64748b;font-size:.78rem}foote
 }
 
 .table-main .dealer-zone,.table-main .player-hands,.table-main .play-message{text-align:center}
+
+.play-accuracy-line{display:flex;align-items:center;justify-content:center;gap:5px;min-height:1.45rem}.play-decision-indicator{display:inline-grid;place-items:center;width:1.25rem;height:1.25rem;border-radius:999px;font-size:1.12rem;font-weight:1000;line-height:1;opacity:0;transform:scale(.8)}.play-decision-indicator.visible{opacity:.5}.play-decision-indicator.correct{color:#fff;background:#16a34a}.play-decision-indicator.incorrect{color:#fff;background:#dc2626}.play-decision-indicator.pulse{animation:play-decision-pulse .82s ease-out forwards}@keyframes play-decision-pulse{0%{opacity:0;transform:scale(.55)}22%{opacity:1;transform:scale(1.38)}43%{opacity:1;transform:scale(.9)}62%{opacity:1;transform:scale(1.12)}100%{opacity:.5;transform:scale(1)}}@media(prefers-reduced-motion:reduce){.play-decision-indicator.pulse{animation:none;opacity:.7;transform:scale(1)}}

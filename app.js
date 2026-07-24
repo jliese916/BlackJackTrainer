@@ -32,6 +32,8 @@ const elements = {
   lookupClear: $("#lookupClear"),
   playPanel: $("#playPanel"),
   playBalance: $("#playBalance"),
+  playAccuracy: $("#playAccuracy"),
+  playDecisionIndicator: $("#playDecisionIndicator"),
   playDealer: $("#playDealer"),
   dealerTotal: $("#dealerTotal"),
   playHands: $("#playHands"),
@@ -489,6 +491,8 @@ function newPlaySession() {
     balanceHistory:[0],
     optimalBalanceHistory:[0],
     completedRounds:0,
+    playAttempts:0,
+    playCorrect:0,
     shoe,
     shoePosition:0,
     cutPosition:Math.floor(TOTAL_CARDS * (0.80 + 0.10 * randomFloat())),
@@ -513,6 +517,16 @@ function loadPlaySession() {
       const completedRounds = Number.isFinite(stored.completedRounds)
         ? stored.completedRounds
         : Math.max(0, Math.min(balanceHistory.length, optimalBalanceHistory.length) - 1);
+      const savedAttemptsRaw = localStorage.getItem("blackjackPlayAttempts");
+      const savedCorrectRaw = localStorage.getItem("blackjackPlayCorrect");
+      const savedAttempts = savedAttemptsRaw === null ? NaN : Number(savedAttemptsRaw);
+      const savedCorrect = savedCorrectRaw === null ? NaN : Number(savedCorrectRaw);
+      const playAttempts = Number.isFinite(savedAttempts)
+        ? savedAttempts
+        : (Number.isFinite(stored.playAttempts) ? stored.playAttempts : 0);
+      const playCorrect = Number.isFinite(savedCorrect)
+        ? savedCorrect
+        : (Number.isFinite(stored.playCorrect) ? stored.playCorrect : 0);
       return {
         ...stored,
         balance,
@@ -520,6 +534,8 @@ function loadPlaySession() {
         balanceHistory:balanceHistory.length ? balanceHistory : [balance],
         optimalBalanceHistory:optimalBalanceHistory.length ? optimalBalanceHistory : [optimalBalance],
         completedRounds,
+        playAttempts,
+        playCorrect,
         round:null,
         busy:false,
         message:""
@@ -536,10 +552,46 @@ function savePlaySession() {
     balanceHistory:state.play.balanceHistory,
     optimalBalanceHistory:state.play.optimalBalanceHistory,
     completedRounds:state.play.completedRounds,
+    playAttempts:state.play.playAttempts,
+    playCorrect:state.play.playCorrect,
     shoe:state.play.shoe,
     shoePosition:state.play.shoePosition,
     cutPosition:state.play.cutPosition
   }));
+  localStorage.setItem("blackjackPlayAttempts", String(state.play.playAttempts));
+  localStorage.setItem("blackjackPlayCorrect", String(state.play.playCorrect));
+}
+
+function clearPlayDecisionIndicator() {
+  elements.playDecisionIndicator.textContent = "";
+  elements.playDecisionIndicator.className = "play-decision-indicator";
+  elements.playDecisionIndicator.setAttribute("aria-label", "");
+}
+
+function flashPlayDecisionIndicator(wasCorrect) {
+  const symbol = wasCorrect ? "+" : "−";
+  const resultClass = wasCorrect ? "correct" : "incorrect";
+  const spokenText = wasCorrect ? "Correct basic-strategy decision" : "Incorrect basic-strategy decision";
+
+  elements.playDecisionIndicator.textContent = symbol;
+  elements.playDecisionIndicator.setAttribute("aria-label", spokenText);
+  elements.playDecisionIndicator.className = "play-decision-indicator";
+  void elements.playDecisionIndicator.offsetWidth;
+  elements.playDecisionIndicator.classList.add("visible", resultClass, "pulse");
+}
+
+function recordPlayDecision(action, hand, availableActions) {
+  const canDouble = availableActions.includes("double");
+  const canSplit = availableActions.includes("split");
+  const correctAction = strategyAction(hand.cards, state.play.round.dealer[0], { canDouble, canSplit });
+  const wasCorrect = action === correctAction;
+
+  state.play.playAttempts += 1;
+  if (wasCorrect) state.play.playCorrect += 1;
+  localStorage.setItem("blackjackPlayAttempts", String(state.play.playAttempts));
+  localStorage.setItem("blackjackPlayCorrect", String(state.play.playCorrect));
+  flashPlayDecisionIndicator(wasCorrect);
+  return wasCorrect;
 }
 
 function reshufflePlayShoe() {
@@ -587,6 +639,7 @@ function recordCompletedRound() {
 async function dealPlayRound() {
   if (state.play.busy || (state.play.round && state.play.round.stage !== "complete")) return;
   ensureShoe();
+  clearPlayDecisionIndicator();
   state.play.busy = true;
   state.play.balance -= BASE_WAGER;
   const balanceBefore = state.play.balance + BASE_WAGER;
@@ -668,7 +721,9 @@ async function playAction(action) {
   if (state.play.busy) return;
   const round = state.play.round;
   const hand = activePlayHand();
-  if (!round || round.stage !== "player" || !hand || !availablePlayActions().includes(action)) return;
+  const availableActions = availablePlayActions();
+  if (!round || round.stage !== "player" || !hand || !availableActions.includes(action)) return;
+  recordPlayDecision(action, hand, availableActions);
   state.play.busy = true;
 
   if (action === "hit") {
@@ -965,6 +1020,9 @@ function drawBalanceChart() {
 function renderPlay() {
   const play = state.play;
   elements.playBalance.textContent = formatUnits(play.balance);
+  const playAccuracy = play.playAttempts ? 100 * play.playCorrect / play.playAttempts : 0;
+  elements.playAccuracy.textContent = `${playAccuracy.toFixed(1)}%`;
+  elements.playAccuracy.setAttribute("title", `${play.playCorrect} correct of ${play.playAttempts} decisions`);
   elements.playBalance.classList.toggle("positive", play.balance > 0);
   elements.playBalance.classList.toggle("negative", play.balance < 0);
 
@@ -1140,6 +1198,7 @@ elements.dealButton.addEventListener("click", dealPlayRound);
 elements.resetPlay.addEventListener("click", () => {
   if (!confirm("Reset the balance, graph, and six-deck shoe?")) return;
   state.play = newPlaySession();
+  clearPlayDecisionIndicator();
   savePlaySession();
   renderPlay();
 });

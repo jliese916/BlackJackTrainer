@@ -6,7 +6,7 @@ A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript
 
 - **Train:** first-decision basic-strategy practice with score and percentage.
 - **Look Up:** select a dealer card, then tap two player cards into outlined card slots.
-- **Play:** full blackjack hands using a persistent six-deck shoe.
+- **Play:** full blackjack hands using a persistent six-deck shoe, with running basic-strategy accuracy for every player decision.
 - **El Jefe Challenge:** 200 silent-scored decisions; 196 correct answers (98%) are required to pass.
 
 ## Rule profile
@@ -63,7 +63,7 @@ This works when both projects are GitHub Pages repositories under the same
 GitHub username and the video-poker repository is named
 `https://jliese916.github.io/JacksOrBetter/`.
 
-## Version 4 changes
+## Version 6 changes
 
 - The six-deck shoe is on the left, the player-action rail is on the right, and dealer/player cards stay centered in the middle.
 - Removed the Mandalay Bay affiliation disclaimer from the Play screen.
@@ -71,4 +71,7 @@ GitHub username and the video-poker repository is named
 - The strategy profile links directly to the Wizard of Odds chart used by the trainer.
 
 - The El Jefe Challenge now requires 196 of 200 correct decisions (98%) to pass.
-- Service-worker cache: `el-jefe-blackjack-v4`.
+- Play mode now tracks the percentage of correct basic-strategy decisions across hits, stands, doubles, and splits.
+- A green `+` or red `−` pulses beside the Play accuracy after each decision.
+- Play accuracy persists locally and resets with Session controls.
+- Service-worker cache: `el-jefe-blackjack-v6`.

@@ -1,7 +1,7 @@
 {
   "name": "El Jefe's Blackjack Trainer",
   "short_name": "El Jefe BJ",
-  "description": "Blackjack strategy training, card lookup, six-deck play, and optimal-play bankroll comparison.",
+  "description": "Blackjack strategy training, card lookup, six-deck play, decision accuracy, and optimal-play bankroll comparison.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
