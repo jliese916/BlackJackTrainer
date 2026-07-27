@@ -184,3 +184,70 @@ footer{text-align:center;margin:18px auto 0;color:#64748b;font-size:.78rem}foote
 
 /* Challenge missed-hand review */
 .challenge-review{padding:2px 0 4px;text-align:left}.challenge-review-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:8px}.challenge-review-heading h2{margin:3px 0 0;color:#0f172a}.challenge-review-intro{margin:0 0 16px!important;text-align:left}.challenge-review-link{display:inline-block;margin:16px auto 0;border:0;background:transparent;color:#334155;font-weight:850;text-decoration:underline;text-underline-offset:3px;cursor:pointer}.missed-hand-list{display:grid;gap:13px}.missed-hand-card{padding:14px;border:1px solid #dbe3ed;border-radius:16px;background:#f8fafc;box-shadow:0 5px 14px rgba(15,23,42,.05)}.missed-hand-number{margin-bottom:10px;color:#475569;font-size:.76rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.missed-blackjack-table{display:grid;grid-template-columns:1fr 1fr;gap:12px}.missed-card-group{display:grid;justify-items:center;gap:7px;padding:10px 7px;border-radius:12px;background:#fff}.missed-card-label{color:#475569;font-size:.78rem;font-weight:850;text-align:center}.mini-review-hand{display:flex;justify-content:center;gap:5px;min-height:62px}.missed-decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}.missed-decision-grid>div{display:grid;gap:3px;padding:9px 10px;border-radius:11px;background:#fff}.missed-decision-grid span{color:#64748b;font-size:.69rem;font-weight:850;letter-spacing:.07em;text-transform:uppercase}.missed-decision-grid strong{font-size:1rem}.incorrect-decision{color:#b91c1c}.correct-decision{color:#15803d}@media(max-width:430px){.challenge-review-heading{align-items:center}.missed-blackjack-table{gap:7px}.missed-decision-grid{grid-template-columns:1fr}.missed-hand-card{padding:11px}}
+
+/* Focused training */
+.train-focus-toggle{
+  display:flex;align-items:center;gap:11px;width:min(520px,100%);margin:-5px auto 16px;padding:12px 14px;
+  border:1px solid #cbd5e1;border-radius:14px;background:#f8fafc;color:#334155;text-align:left;cursor:pointer;
+}
+.train-focus-toggle input{width:20px;height:20px;margin:0;accent-color:#0f6b49;flex:0 0 auto}
+.train-focus-toggle span{display:grid;gap:2px}.train-focus-toggle strong{font-size:.9rem}.train-focus-toggle small{color:#64748b;font-size:.76rem;line-height:1.3}
+
+/* Complete basic-strategy table */
+.strategy-chart-details{
+  width:min(680px,100%);margin:20px auto 0;padding:0;border:1px solid #cbd5e1;border-radius:17px;background:#f8fafc;text-align:left;overflow:hidden;
+}
+.strategy-chart-details>summary{padding:14px 16px;color:#0f172a;font-weight:900;cursor:pointer;list-style-position:inside}
+.strategy-chart-details[open]>summary{border-bottom:1px solid #dbe3ed;background:#eef3f8}
+.strategy-table-container{display:grid;gap:15px;padding:15px 10px 18px}
+.strategy-table-intro{padding:4px 5px 1px}.strategy-table-intro p{margin:0 0 10px;color:#475569;font-size:.82rem;line-height:1.4}
+.strategy-legend{display:flex;flex-wrap:wrap;gap:7px}
+.strategy-legend span{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid #cbd5e1;border-radius:999px;background:#fff;color:#475569;font-size:.72rem;font-weight:750}
+.strategy-legend b{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:6px;color:#fff;font-size:.75rem}
+.strategy-legend .strategy-hit b{background:#2563eb}.strategy-legend .strategy-stand b{background:#15803d}.strategy-legend .strategy-double b{background:#ca8a04}.strategy-legend .strategy-split b{background:#7c3aed}
+.strategy-table-section{overflow:hidden;border:1px solid #dbe3ed;border-radius:14px;background:#fff}
+.strategy-table-heading{padding:11px 12px 9px;border-bottom:1px solid #e2e8f0;background:linear-gradient(135deg,#fff,#f1f5f9)}
+.strategy-table-heading h3{margin:0;color:#0f172a;font-size:1rem}.strategy-table-heading p{margin:3px 0 0;color:#64748b;font-size:.73rem;line-height:1.35}
+.strategy-table-scroll{overflow-x:auto;overscroll-behavior-inline:contain}
+.strategy-grid{width:100%;min-width:575px;border-collapse:separate;border-spacing:0;text-align:center;font-variant-numeric:tabular-nums}
+.strategy-grid th,.strategy-grid td{min-width:43px;height:36px;padding:5px;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;font-size:.77rem}
+.strategy-grid thead th{position:sticky;top:0;background:#0f172a;color:#fff;font-weight:900;z-index:1}
+.strategy-grid thead th:first-child{left:0;z-index:2;min-width:78px}
+.strategy-grid tbody th{position:sticky;left:0;min-width:78px;background:#f8fafc;color:#334155;font-weight:900;z-index:1}
+.strategy-grid tr:last-child th,.strategy-grid tr:last-child td{border-bottom:0}.strategy-grid th:last-child,.strategy-grid td:last-child{border-right:0}
+.strategy-action{font-weight:950;color:#fff;text-shadow:0 1px rgba(0,0,0,.12)}
+.strategy-action.strategy-hit{background:#3b82f6}.strategy-action.strategy-stand{background:#22a05a}.strategy-action.strategy-double{background:#d99a18}.strategy-action.strategy-split{background:#8b5cf6}
+.strategy-table-footnote{margin:0 5px;color:#64748b;font-size:.72rem;line-height:1.4}
+
+/* Session mistake review */
+.session-review-details{width:min(650px,100%);margin-inline:auto;text-align:left}
+.session-review-details[open]>summary{margin-bottom:12px}
+.session-mistake-list{display:grid;gap:12px;padding-top:2px}
+.session-mistake-empty{margin:2px 0 1px;color:#64748b;font-size:.82rem}
+.session-mistake-card{padding:12px;border:1px solid #dbe3ed;border-radius:14px;background:#f8fafc;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+.session-mistake-title{margin-bottom:9px;color:#475569;font-size:.74rem;font-weight:950;letter-spacing:.07em;text-transform:uppercase}
+
+/* Perfect challenge certificate */
+.grand-master-certificate{
+  isolation:isolate;padding-top:29px;border:8px double #f5d76e;
+  background:
+    radial-gradient(circle at 50% 33%,rgba(255,232,135,.2),transparent 31%),
+    linear-gradient(145deg,#180c2f 0,#35115e 43%,#111827 100%);
+  color:#fff7d6;box-shadow:inset 0 0 0 2px rgba(255,239,166,.22),0 18px 40px rgba(39,11,65,.34)
+}
+.grand-master-certificate::before,.grand-master-certificate::after{content:"";position:absolute;z-index:-1;border:1px solid rgba(245,215,110,.24);transform:rotate(45deg)}
+.grand-master-certificate::before{width:240px;height:240px;top:-150px;left:-105px}.grand-master-certificate::after{width:280px;height:280px;right:-155px;bottom:-180px}
+.grand-master-suits{margin-bottom:8px;color:#f5d76e;font-size:1.05rem;font-weight:900;letter-spacing:.45em}
+.grand-master-certificate .certificate-small{color:#f5d76e}
+.grand-master-title{margin:10px 0 8px;font-size:clamp(2.15rem,9vw,3.45rem);font-weight:950;line-height:.92;letter-spacing:.04em;text-shadow:0 3px 14px rgba(0,0,0,.42)}
+.grand-master-rule{width:76%;height:3px;margin:16px auto;background:linear-gradient(90deg,transparent,#f5d76e,transparent)}
+.grand-master-score{display:inline-block;margin:6px 0 11px;padding:9px 17px;border:1px solid rgba(245,215,110,.7);border-radius:999px;background:rgba(255,255,255,.08);color:#fff4b5;font-size:1.25rem;font-weight:950}
+.grand-master-seal{display:grid;place-items:center;width:92px;height:92px;margin:8px auto 12px;border:2px solid #f5d76e;border-radius:50%;background:radial-gradient(circle,#6b3aa1,#35115e 72%);box-shadow:0 0 0 5px rgba(245,215,110,.12),0 8px 20px rgba(0,0,0,.25);transform:rotate(-5deg)}
+.grand-master-seal span{font-size:1.35rem;font-weight:950;line-height:1}.grand-master-seal small{margin-top:-15px;color:#f5d76e;font-size:.58rem;font-weight:900;letter-spacing:.13em}
+.grand-master-certified{margin:7px 0!important;color:#f5d76e;font-size:1.12rem;font-weight:900;font-style:italic}
+.grand-master-certificate .certificate-share{background:#f5d76e;color:#2d1748}
+
+@media(max-width:480px){
+  .strategy-table-container{padding-inline:7px}.strategy-grid{min-width:535px}.strategy-grid th,.strategy-grid td{min-width:39px;padding:4px}
+  .train-focus-toggle{padding-inline:11px}.grand-master-suits{letter-spacing:.28em}
+}

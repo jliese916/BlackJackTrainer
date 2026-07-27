@@ -21,6 +21,7 @@ const elements = {
   trainScoreText: $("#trainScoreText"),
   trainPercent: $("#trainPercent"),
   resetTrainScore: $("#resetTrainScore"),
+  trainFocusedHands: $("#trainFocusedHands"),
   lookupPanel: $("#lookupPanel"),
   lookupDealerTarget: $("#lookupDealerTarget"),
   lookupPlayerTarget: $("#lookupPlayerTarget"),
@@ -30,6 +31,7 @@ const elements = {
   lookupRankPicker: $("#lookupRankPicker"),
   lookupResult: $("#lookupResult"),
   lookupClear: $("#lookupClear"),
+  strategyTableContainer: $("#strategyTableContainer"),
   playPanel: $("#playPanel"),
   playBalance: $("#playBalance"),
   playAccuracy: $("#playAccuracy"),
@@ -48,6 +50,8 @@ const elements = {
   playDeltaSummary: $("#playDeltaSummary"),
   playBalanceChart: $("#playBalanceChart"),
   resetPlay: $("#resetPlay"),
+  playMistakeCount: $("#playMistakeCount"),
+  playMistakeList: $("#playMistakeList"),
   challengeLaunch: $("#challengeLaunch"),
   challengePanel: $("#challengePanel"),
   challengeGame: $("#challengeGame"),
@@ -61,10 +65,11 @@ const elements = {
 };
 
 const state = {
-  mode: "train",
+  mode: "play",
   train: {
     scenario: null,
     answered: false,
+    focusedHands: localStorage.getItem("blackjackTrainFocusedHands") === "true",
     attempts: Number(localStorage.getItem("blackjackTrainAttempts") || 0),
     correct: Number(localStorage.getItem("blackjackTrainCorrect") || 0)
   },
@@ -216,12 +221,22 @@ function renderHand(container, cards, options = {}) {
   }
 }
 
-function scenarioFromFreshShoe() {
+function isFocusedTrainingHand(cards) {
+  if (sameRankPair(cards)) return true;
+  const ranks = cards.map(rankOf);
+  const aceIndex = ranks.indexOf(12);
+  if (aceIndex < 0) return false;
+  const otherRank = ranks[aceIndex === 0 ? 1 : 0];
+  return otherRank >= 0 && otherRank <= 7; // A-2 through A-9
+}
+
+function scenarioFromFreshShoe(options = {}) {
   while (true) {
     const cards = sixDeckShoe();
     const player = [cards[0], cards[2]];
     const dealer = [cards[1], cards[3]];
     if (handInfo(player).blackjack || handInfo(dealer).blackjack) continue;
+    if (options.focusedHands && !isFocusedTrainingHand(player)) continue;
     return { player, dealer };
   }
 }
@@ -256,7 +271,7 @@ function switchMode(mode) {
 }
 
 function newTrainHand() {
-  state.train.scenario = scenarioFromFreshShoe();
+  state.train.scenario = scenarioFromFreshShoe({ focusedHands: state.train.focusedHands });
   state.train.answered = false;
   elements.trainFeedback.textContent = "";
   elements.trainFeedback.className = "feedback";
@@ -265,6 +280,7 @@ function newTrainHand() {
 
 function renderTrain() {
   const { player, dealer } = state.train.scenario;
+  elements.trainFocusedHands.checked = state.train.focusedHands;
   renderHand(elements.trainDealer, [dealer[0]]);
   elements.trainDealer.append(cardElement(dealer[1], { back:true }));
   renderHand(elements.trainPlayer, player);
@@ -365,6 +381,116 @@ function renderLookup() {
   } else {
     elements.lookupResult.textContent = "";
   }
+}
+
+const STRATEGY_DEALER_RANKS = [0,1,2,3,4,5,6,7,8,12];
+const STRATEGY_DEALER_LABELS = ["2","3","4","5","6","7","8","9","10","A"];
+const STRATEGY_ACTION_CODES = { hit:"H", stand:"S", double:"D", split:"P" };
+const STRATEGY_ACTION_NAMES = { hit:"Hit", stand:"Stand", double:"Double", split:"Split" };
+
+function strategyTableCell(action) {
+  const cell = document.createElement("td");
+  cell.className = `strategy-action strategy-${action}`;
+  cell.textContent = STRATEGY_ACTION_CODES[action];
+  cell.title = STRATEGY_ACTION_NAMES[action];
+  cell.setAttribute("aria-label", STRATEGY_ACTION_NAMES[action]);
+  return cell;
+}
+
+function buildStrategySection(title, subtitle, rows) {
+  const section = document.createElement("section");
+  section.className = "strategy-table-section";
+
+  const heading = document.createElement("div");
+  heading.className = "strategy-table-heading";
+  heading.innerHTML = `<h3>${title}</h3><p>${subtitle}</p>`;
+
+  const scroll = document.createElement("div");
+  scroll.className = "strategy-table-scroll";
+  const table = document.createElement("table");
+  table.className = "strategy-grid";
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  const corner = document.createElement("th");
+  corner.scope = "col";
+  corner.textContent = "Your hand";
+  headerRow.append(corner);
+  STRATEGY_DEALER_LABELS.forEach((label) => {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = label;
+    headerRow.append(th);
+  });
+  thead.append(headerRow);
+
+  const tbody = document.createElement("tbody");
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+    const label = document.createElement("th");
+    label.scope = "row";
+    label.textContent = row.label;
+    tr.append(label);
+    STRATEGY_DEALER_RANKS.forEach((dealerRank) => {
+      const action = strategyAction(row.cards(), cardFromRank(dealerRank, 3));
+      tr.append(strategyTableCell(action));
+    });
+    tbody.append(tr);
+  });
+  table.append(thead, tbody);
+  scroll.append(table);
+  section.append(heading, scroll);
+  return section;
+}
+
+function renderStrategyTables() {
+  if (!elements.strategyTableContainer || elements.strategyTableContainer.childElementCount) return;
+
+  const intro = document.createElement("div");
+  intro.className = "strategy-table-intro";
+  intro.innerHTML = `
+    <p>Use the pair table first, then soft totals, then hard totals. Dealer upcards run across the top; this chart shows the two-card decision.</p>
+    <div class="strategy-legend" aria-label="Strategy action legend">
+      <span class="strategy-hit"><b>H</b> Hit</span>
+      <span class="strategy-stand"><b>S</b> Stand</span>
+      <span class="strategy-double"><b>D</b> Double</span>
+      <span class="strategy-split"><b>P</b> Split</span>
+    </div>`;
+
+  const pairRanks = [0,1,2,3,4,5,6,7,8,12];
+  const pairRows = pairRanks.map((rank) => ({
+    label: rank === 8 ? "10-10*" : `${RANKS[rank]}-${RANKS[rank]}`,
+    cards: () => [cardFromRank(rank, 0), cardFromRank(rank, 1)]
+  }));
+
+  const softRows = Array.from({ length:8 }, (_, index) => {
+    const otherRank = index;
+    return {
+      label: `A-${RANKS[otherRank]}`,
+      cards: () => [cardFromRank(12, 0), cardFromRank(otherRank, 1)]
+    };
+  });
+
+  const hardRowSpecs = [
+    ["5",0,1], ["6",0,2], ["7",1,2], ["8",1,3], ["9",2,3],
+    ["10",2,4], ["11",3,4], ["12",3,5], ["13",4,5], ["14",4,6],
+    ["15",5,6], ["16",5,7], ["17+",5,8]
+  ];
+  const hardRows = hardRowSpecs.map(([label, first, second]) => ({
+    label,
+    cards: () => [cardFromRank(first, 0), cardFromRank(second, 1)]
+  }));
+
+  const footnote = document.createElement("p");
+  footnote.className = "strategy-table-footnote";
+  footnote.textContent = "* Face-card pairs follow the 10-10 row. Surrender is not offered. When doubling or splitting is unavailable, the trainer recalculates the best legal action.";
+
+  elements.strategyTableContainer.append(
+    intro,
+    buildStrategySection("Pairs", "Split decisions take priority over the hand total.", pairRows),
+    buildStrategySection("Soft totals", "An ace is being counted as 11.", softRows),
+    buildStrategySection("Hard totals", "Use this table when the hand is neither a pair nor soft.", hardRows),
+    footnote
+  );
 }
 
 function simulateOptimalRound(initialPlayer, initialDealer, drawPile) {
@@ -494,6 +620,7 @@ function newPlaySession() {
     completedRounds:0,
     playAttempts:0,
     playCorrect:0,
+    mistakes:[],
     shoe,
     shoePosition:0,
     cutPosition:Math.floor(TOTAL_CARDS * (0.80 + 0.10 * randomFloat())),
@@ -528,6 +655,9 @@ function loadPlaySession() {
       const playCorrect = Number.isFinite(savedCorrect)
         ? savedCorrect
         : (Number.isFinite(stored.playCorrect) ? stored.playCorrect : 0);
+      const mistakes = Array.isArray(stored.mistakes)
+        ? stored.mistakes.filter((mistake) => mistake && Number.isFinite(mistake.handNumber) && Array.isArray(mistake.player))
+        : [];
       return {
         ...stored,
         balance,
@@ -537,6 +667,7 @@ function loadPlaySession() {
         completedRounds,
         playAttempts,
         playCorrect,
+        mistakes,
         round:null,
         busy:false,
         message:""
@@ -555,6 +686,7 @@ function savePlaySession() {
     completedRounds:state.play.completedRounds,
     playAttempts:state.play.playAttempts,
     playCorrect:state.play.playCorrect,
+    mistakes:state.play.mistakes,
     shoe:state.play.shoe,
     shoePosition:state.play.shoePosition,
     cutPosition:state.play.cutPosition
@@ -582,15 +714,29 @@ function flashPlayDecisionIndicator(wasCorrect) {
 }
 
 function recordPlayDecision(action, hand, availableActions) {
+  const round = state.play.round;
   const canDouble = availableActions.includes("double");
   const canSplit = availableActions.includes("split");
-  const correctAction = strategyAction(hand.cards, state.play.round.dealer[0], { canDouble, canSplit });
+  const correctAction = strategyAction(hand.cards, round.dealer[0], { canDouble, canSplit });
   const wasCorrect = action === correctAction;
 
+  round.decisionCount = (round.decisionCount || 0) + 1;
   state.play.playAttempts += 1;
-  if (wasCorrect) state.play.playCorrect += 1;
-  localStorage.setItem("blackjackPlayAttempts", String(state.play.playAttempts));
-  localStorage.setItem("blackjackPlayCorrect", String(state.play.playCorrect));
+  if (wasCorrect) {
+    state.play.playCorrect += 1;
+  } else {
+    const splitHandIndex = round.hands.indexOf(hand);
+    state.play.mistakes.push({
+      handNumber: round.sessionHandNumber || state.play.completedRounds + 1,
+      decisionNumber: round.decisionCount,
+      splitHandNumber: round.hands.length > 1 && splitHandIndex >= 0 ? splitHandIndex + 1 : null,
+      dealerUp: round.dealer[0],
+      player: [...hand.cards],
+      chosen: action,
+      correct: correctAction
+    });
+  }
+  savePlaySession();
   flashPlayDecisionIndicator(wasCorrect);
   return wasCorrect;
 }
@@ -649,6 +795,8 @@ async function dealPlayRound() {
     dealer:[],
     hands:[{ cards:[], bet:BASE_WAGER, status:"active", fromSplit:false, splitAces:false, outcome:"" }],
     activeIndex:0,
+    sessionHandNumber:state.play.completedRounds + 1,
+    decisionCount:0,
     balanceBefore,
     optimalNet:null,
     historyRecorded:false
@@ -1018,8 +1166,63 @@ function drawBalanceChart() {
   );
 }
 
+function renderPlayMistakes() {
+  const mistakes = Array.isArray(state.play.mistakes) ? state.play.mistakes : [];
+  elements.playMistakeCount.textContent = String(mistakes.length);
+  elements.playMistakeList.replaceChildren();
+
+  if (!mistakes.length) {
+    const empty = document.createElement("p");
+    empty.className = "session-mistake-empty";
+    empty.textContent = "No incorrect decisions yet this session.";
+    elements.playMistakeList.append(empty);
+    return;
+  }
+
+  mistakes.forEach((mistake) => {
+    const item = document.createElement("article");
+    item.className = "session-mistake-card";
+
+    const title = document.createElement("div");
+    title.className = "session-mistake-title";
+    const splitLabel = mistake.splitHandNumber ? ` · Split hand ${mistake.splitHandNumber}` : "";
+    title.textContent = `Hand ${mistake.handNumber}${splitLabel} · Decision ${mistake.decisionNumber}`;
+
+    const table = document.createElement("div");
+    table.className = "missed-blackjack-table";
+
+    const dealer = document.createElement("div");
+    dealer.className = "missed-card-group";
+    dealer.innerHTML = '<div class="missed-card-label">Dealer</div>';
+    const dealerCards = document.createElement("div");
+    dealerCards.className = "mini-review-hand";
+    dealerCards.append(cardElement(mistake.dealerUp, { small:true }));
+    dealerCards.append(cardElement(0, { small:true, back:true }));
+    dealer.append(dealerCards);
+
+    const player = document.createElement("div");
+    player.className = "missed-card-group";
+    player.innerHTML = `<div class="missed-card-label">You · ${blackjackHandDescription(mistake.player)}</div>`;
+    const playerCards = document.createElement("div");
+    playerCards.className = "mini-review-hand";
+    mistake.player.forEach((card) => playerCards.append(cardElement(card, { small:true })));
+    player.append(playerCards);
+    table.append(dealer, player);
+
+    const decisions = document.createElement("div");
+    decisions.className = "missed-decision-grid";
+    decisions.innerHTML = `
+      <div><span>Your decision</span><strong class="incorrect-decision">${ACTION_LABELS[mistake.chosen]}</strong></div>
+      <div><span>Correct decision</span><strong class="correct-decision">${ACTION_LABELS[mistake.correct]}</strong></div>`;
+
+    item.append(title, table, decisions);
+    elements.playMistakeList.append(item);
+  });
+}
+
 function renderPlay() {
   const play = state.play;
+  renderPlayMistakes();
   elements.playBalance.textContent = formatUnits(play.balance);
   const playAccuracy = play.playAttempts ? 100 * play.playCorrect / play.playAttempts : 0;
   elements.playAccuracy.textContent = `${playAccuracy.toFixed(1)}%`;
@@ -1146,30 +1349,48 @@ function renderChallengeSummary() {
   const c = state.challenge;
   const percent = 100 * c.correct / 200;
   const passed = c.correct >= 196;
+  const perfect = c.correct === 200;
   elements.challengeGame.classList.add("hidden");
   elements.challengeSummary.classList.remove("hidden");
   const today = new Intl.DateTimeFormat(undefined, { year:"numeric", month:"long", day:"numeric" }).format(new Date());
-  elements.challengeSummary.innerHTML = passed ? `
-    <div class="certificate">
-      <div class="certificate-small">CERTIFICATE OF BLACKJACK READINESS</div>
-      <div class="certificate-title">EL JEFE APPROVED</div>
-      <div class="certificate-rule"></div>
-      <p>This certifies that the bearer completed the 200-hand El Jefe Blackjack Challenge with:</p>
-      <div class="certificate-score">${c.correct} / 200 · ${percent.toFixed(1)}%</div>
-      <p>You are now approved to play blackjack in Las Vegas.</p>
-      <p>${today}</p>
-      <div class="certificate-share">Screenshot this certificate and send it to the group text thread.</div>
-    </div>
-    <button class="challenge-review-link" id="challengeReviewLink" type="button">See missed hands (${c.misses.length})</button>
-    <div class="challenge-summary-actions">
-      <button class="primary" id="challengeAgain">Try Again</button>
-      <button id="challengeDone">Done</button>
-    </div>` : `
-    <div class="challenge-fail">
-      <h2>Not quite El Jefe approved</h2>
-      <div class="challenge-final-score">${c.correct} / 200 · ${percent.toFixed(1)}%</div>
-      <p>You are not quite ready to put money on a blackjack table. Practice the weak spots and try the challenge again.</p>
-    </div>
+
+  let resultMarkup;
+  if (perfect) {
+    resultMarkup = `
+      <div class="certificate grand-master-certificate">
+        <div class="grand-master-suits" aria-hidden="true">♠ · ♦ · ♣ · ♥</div>
+        <div class="certificate-small">CASA DEL JEFE · HALL OF MASTERS</div>
+        <div class="grand-master-title">BLACKJACK<br>GRAND MASTER</div>
+        <div class="grand-master-rule"></div>
+        <p>This certifies a flawless performance in the 200-hand El Jefe Blackjack Challenge.</p>
+        <div class="grand-master-score">200 / 200 · 100%</div>
+        <div class="grand-master-seal"><span>100%</span><small>PERFECT</small></div>
+        <p class="grand-master-certified">Certified by El Jefe</p>
+        <p>${today}</p>
+        <div class="certificate-share">Screenshot this Grand Master certificate and send it to the group text thread.</div>
+      </div>`;
+  } else if (passed) {
+    resultMarkup = `
+      <div class="certificate">
+        <div class="certificate-small">CERTIFICATE OF BLACKJACK READINESS</div>
+        <div class="certificate-title">EL JEFE APPROVED</div>
+        <div class="certificate-rule"></div>
+        <p>This certifies that the bearer completed the 200-hand El Jefe Blackjack Challenge with:</p>
+        <div class="certificate-score">${c.correct} / 200 · ${percent.toFixed(1)}%</div>
+        <p>You are now approved to play blackjack at Casa del Jefe.</p>
+        <p>${today}</p>
+        <div class="certificate-share">Screenshot this certificate and send it to the group text thread.</div>
+      </div>`;
+  } else {
+    resultMarkup = `
+      <div class="challenge-fail">
+        <h2>Not quite El Jefe approved</h2>
+        <div class="challenge-final-score">${c.correct} / 200 · ${percent.toFixed(1)}%</div>
+        <p>You are not quite ready to put money on a blackjack table. Practice the weak spots and try the challenge again.</p>
+      </div>`;
+  }
+
+  elements.challengeSummary.innerHTML = `${resultMarkup}
     <button class="challenge-review-link" id="challengeReviewLink" type="button">See missed hands (${c.misses.length})</button>
     <div class="challenge-summary-actions">
       <button class="primary" id="challengeAgain">Try Again</button>
@@ -1278,6 +1499,11 @@ function exitChallenge() {
 
 elements.tabs.forEach((tab) => tab.addEventListener("click", () => switchMode(tab.dataset.mode)));
 elements.trainNext.addEventListener("click", newTrainHand);
+elements.trainFocusedHands.addEventListener("change", () => {
+  state.train.focusedHands = elements.trainFocusedHands.checked;
+  localStorage.setItem("blackjackTrainFocusedHands", String(state.train.focusedHands));
+  newTrainHand();
+});
 elements.resetTrainScore.addEventListener("click", () => {
   state.train.attempts = 0;
   state.train.correct = 0;
@@ -1299,7 +1525,7 @@ elements.lookupClear.addEventListener("click", () => {
 });
 elements.dealButton.addEventListener("click", dealPlayRound);
 elements.resetPlay.addEventListener("click", () => {
-  if (!confirm("Reset the balance, graph, and six-deck shoe?")) return;
+  if (!confirm("Reset the balance, graph, incorrect-decision history, and six-deck shoe?")) return;
   state.play = newPlaySession();
   clearPlayDecisionIndicator();
   savePlaySession();
@@ -1317,9 +1543,10 @@ if ("ResizeObserver" in window) {
   chartObserver.observe(elements.playBalanceChart);
 }
 
+renderStrategyTables();
 newTrainHand();
 renderLookup();
-renderPlay();
+switchMode("play");
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(console.error));

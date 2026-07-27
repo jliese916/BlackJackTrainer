@@ -16,7 +16,6 @@
 <body>
   <main class="app">
     <header>
-      <p class="eyebrow">BLACKJACK PRACTICE</p>
       <h1>El Jefe's Blackjack Trainer</h1>
       <p class="rule-summary">6 decks · dealer hits soft 17 · double after split · no surrender · blackjack pays 6:5</p>
     </header>
@@ -29,13 +28,20 @@
     </div>
 
     <nav id="modeTabs" class="mode-tabs" aria-label="App mode">
-      <button class="mode-tab active" data-mode="train" type="button">Train</button>
+      <button class="mode-tab active" data-mode="play" type="button">Play</button>
+      <button class="mode-tab" data-mode="train" type="button">Train</button>
       <button class="mode-tab" data-mode="lookup" type="button">Look Up</button>
-      <button class="mode-tab" data-mode="play" type="button">Play</button>
     </nav>
 
-    <section id="trainPanel" class="panel">
+    <section id="trainPanel" class="panel hidden">
       <p>Choose the best first decision.</p>
+      <label class="train-focus-toggle" for="trainFocusedHands">
+        <input id="trainFocusedHands" type="checkbox">
+        <span>
+          <strong>Train only soft hands and pairs</strong>
+          <small>Deals only pairs or A-2 through A-9.</small>
+        </span>
+      </label>
       <div id="trainTable" class="practice-table">
         <div class="dealer-zone">
           <div class="zone-label">Dealer</div>
@@ -51,7 +57,7 @@
       <button id="trainNext" class="secondary-button" type="button">New Hand</button>
     </section>
 
-    <section id="trainScore" class="score-card">
+    <section id="trainScore" class="score-card hidden">
       <div><small>Score</small><strong id="trainScoreText">0 / 0</strong></div>
       <div><small>Percentage</small><strong id="trainPercent">0.0%</strong></div>
       <button id="resetTrainScore" class="link-button" type="button">Reset score</button>
@@ -75,13 +81,18 @@
       </div>
       <div id="lookupResult" class="lookup-result" aria-live="polite"></div>
       <button id="lookupClear" class="secondary-button" type="button">Clear cards</button>
+
+      <details class="strategy-chart-details">
+        <summary>Complete Basic Strategy Table</summary>
+        <div id="strategyTableContainer" class="strategy-table-container"></div>
+      </details>
     </section>
 
-    <section id="playPanel" class="panel play-panel hidden">
+    <section id="playPanel" class="panel play-panel">
       <div class="mandalay-table">
-        <div class="mandalay-wordmark" aria-label="Mandalay Bay themed table">
-          <span>MANDALAY BAY</span>
-          <small>LAS VEGAS</small>
+        <div class="mandalay-wordmark" aria-label="Casa del Jefe blackjack table">
+          <span>CASA DEL JEFE</span>
+          <small>BLACKJACK SALON</small>
         </div>
 
         <div class="play-topline" aria-label="Play statistics">
@@ -141,7 +152,12 @@
 
       <details class="play-settings">
         <summary>Session controls</summary>
-        <button id="resetPlay" class="danger-link" type="button">Reset balance and reshuffle</button>
+        <button id="resetPlay" class="danger-link" type="button">Reset balance, history, and reshuffle</button>
+      </details>
+
+      <details id="playMistakesDetails" class="play-settings session-review-details">
+        <summary>Incorrect decisions this session (<span id="playMistakeCount">0</span>)</summary>
+        <div id="playMistakeList" class="session-mistake-list"></div>
       </details>
     </section>
 
@@ -173,7 +189,6 @@
 
     <footer>
       <a class="footer-link" href="https://jliese916.github.io/JacksOrBetter/">Open El Jefe's Jacks or Better Trainer</a>
-      <p>Strategy profile: <a class="footer-link" href="https://wizardofodds.com/games/blackjack/strategy/4-decks/" target="_blank" rel="noopener noreferrer">Wizard of Odds 4-8 deck chart</a> - H17, DAS, no surrender, dealer peek.</p>
     </footer>
   </main>
 

@@ -4,10 +4,10 @@ A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript
 
 ## Modes
 
-- **Train:** first-decision basic-strategy practice with score and percentage.
-- **Look Up:** select a dealer card, then tap two player cards into outlined card slots.
-- **Play:** full blackjack hands using a persistent six-deck shoe, with running basic-strategy accuracy for every player decision.
-- **El Jefe Challenge:** 200 silent-scored decisions; 196 correct answers (98%) are required to pass.
+- **Play:** full blackjack hands from a persistent six-deck shoe, with basic-strategy accuracy, session mistake review, and an optimal-play bankroll comparison.
+- **Train:** first-decision strategy practice with an optional filter for pairs and soft A-2 through A-9 hands.
+- **Look Up:** enter a dealer upcard and two player cards, or open the complete in-app basic-strategy tables.
+- **El Jefe Challenge:** 200 silent-scored decisions; 196 correct answers (98%) are required to pass. A perfect score earns the Blackjack Grand Master certificate.
 
 ## Rule profile
 
@@ -24,7 +24,11 @@ A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript
 - One-unit base wager in Play mode
 - Cut card randomized between 80% and 90% penetration
 
-The basic strategy follows the [Wizard of Odds 4-to-8-deck chart](https://wizardofodds.com/games/blackjack/strategy/4-decks/) using the H17, DAS, no-surrender profile.
+The in-app table and all gameplay decisions use the same H17, DAS, no-surrender strategy engine.
+
+## Session mistake review
+
+Play mode records every incorrect hit, stand, double, or split decision, including decisions made after hitting or splitting. The review list is saved with the current session and is cleared by **Reset balance, history, and reshuffle**.
 
 ## Play graph
 
@@ -33,50 +37,23 @@ Play mode tracks two cumulative balances:
 - **Your play:** green above zero and red below zero.
 - **Optimal play:** a gray counterfactual line.
 
-For each completed round, the app clones the remaining card order immediately
-after the initial deal and plays that one round using basic strategy. The shadow
-round does not consume cards from the real shoe or affect later deals. The graph
-shows the current `Optimal - you` delta with a bracket at the latest point.
+For each completed round, the app clones the remaining card order immediately after the initial deal and plays that round using basic strategy. The shadow round does not consume cards from the real shoe or affect later deals.
 
-## Test on Windows
+## Test locally
 
 Open PowerShell in this folder and run:
 
 `py -m http.server 8000`
 
-Then open:
+Then open `http://localhost:8000`.
 
-`http://localhost:8000`
+## Version 8 changes
 
-## Publish with GitHub Pages
-
-Upload the files directly to the root of a public GitHub repository, then enable
-GitHub Pages from the `main` branch and `/ (root)` folder.
-
-## Link to the Jacks or Better app
-
-The footer link uses:
-
-`https://jliese916.github.io/JacksOrBetter/`
-
-This works when both projects are GitHub Pages repositories under the same
-GitHub username and the video-poker repository is named
-`https://jliese916.github.io/JacksOrBetter/`.
-
-## Version 6 changes
-
-- The six-deck shoe is on the left, the player-action rail is on the right, and dealer/player cards stay centered in the middle.
-- Removed the Mandalay Bay affiliation disclaimer from the Play screen.
-- The vertical shoe is bottom-justified: used-card space grows from the top, and the cut-card marker slides downward with the remaining stack.
-- The strategy profile links directly to the Wizard of Odds chart used by the trainer.
-
-- The El Jefe Challenge now requires 196 of 200 correct decisions (98%) to pass.
-- Play mode now tracks the percentage of correct basic-strategy decisions across hits, stands, doubles, and splits.
-- A green `+` or red `−` pulses beside the Play accuracy after each decision.
-- Play accuracy persists locally and resets with Session controls.
-- Service-worker cache: `el-jefe-blackjack-v7`.
-
-
-## Challenge review
-
-After a 200-hand challenge, select **See missed hands** to review the dealer upcard, player cards, chosen decision, and correct decision for every mistake.
+- Play, Train, and Look Up tab order, with Play opening first.
+- Removed the top practice label and external strategy-profile link.
+- Renamed the table **Casa del Jefe — Blackjack Salon**.
+- Added complete, color-coded Pair, Soft, and Hard strategy tables under Look Up.
+- Added focused Train mode for pairs and A-2 through A-9.
+- Added a persistent session review for mistakes made at any decision point.
+- Added a special Blackjack Grand Master certificate for 200/200.
+- Service-worker cache: `el-jefe-blackjack-v8`.
