@@ -56,4 +56,4 @@ Then open `http://localhost:8000`.
 - Added focused Train mode for pairs and A-2 through A-9.
 - Added a persistent session review for mistakes made at any decision point.
 - Added a special Blackjack Grand Master certificate for 200/200.
-- Service-worker cache: `el-jefe-blackjack-v8`.
+- Service-worker cache: `el-jefe-blackjack-v9`.
