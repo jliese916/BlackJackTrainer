@@ -259,7 +259,16 @@ function renderActionButtons(container, actions, handler, options = {}) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `action-button ${action}${available ? "" : " action-unavailable"}`;
-    button.textContent = ACTION_LABELS[action];
+    button.setAttribute("aria-label", ACTION_LABELS[action]);
+    const key = document.createElement("span");
+    key.className = `action-key strategy-${action}`;
+    key.textContent = action === "split" ? "P" : action[0].toUpperCase();
+    key.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.className = "action-label";
+    label.textContent = ACTION_LABELS[action];
+    label.setAttribute("aria-hidden", "true");
+    button.append(key, label);
     button.dataset.action = action;
 
     if (available) {

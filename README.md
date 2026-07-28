@@ -99,3 +99,11 @@ Then open `http://localhost:8000`.
 - Prevents the dealer total appearing after the hole card is revealed from nudging the cards, action buttons, or Deal button.
 - Normal one-hit and stand hands remain stationary; genuine card wrapping can still increase the hand area as intended.
 - Service-worker cache: `el-jefe-blackjack-v19`.
+
+
+## Version 20 changes
+
+- Play and Train action controls now mirror the Basic Strategy legend.
+- Each neutral action button contains the same color-coded letter badge used in the strategy tables: H, S, D, and P.
+- Fixed action positions and the two-row layout are unchanged.
+- Service-worker cache: `el-jefe-blackjack-v20`.
