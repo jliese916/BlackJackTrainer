@@ -65,7 +65,9 @@
 <small>Deals only pairs or A-2 through A-9.</small>
 </span>
 </label>
-<div class="practice-table" id="trainTable">
+<div class="train-playfield">
+<div class="train-table-main">
+<div class="practice-table train-practice-table" id="trainTable">
 <div class="dealer-zone">
 <div class="zone-label">Dealer</div>
 <div class="hand" id="trainDealer"></div>
@@ -75,9 +77,11 @@
 <div class="hand" id="trainPlayer"></div>
 </div>
 </div>
-<div class="blackjack-actions" id="trainActions"></div>
 <div aria-live="polite" class="feedback" id="trainFeedback"></div>
-<button class="secondary-button" id="trainNext" type="button">New Hand</button>
+<button class="deal-button train-next-button" id="trainNext" type="button">New Hand</button>
+</div>
+<aside aria-label="Training actions" class="blackjack-actions action-rail train-actions-rail" id="trainActions"></aside>
+</div>
 </section>
 <section class="score-card hidden" id="trainScore">
 <div><small>Score</small><strong id="trainScoreText">0 / 0</strong></div>
@@ -147,7 +151,7 @@
 <div aria-live="polite" class="play-message" id="playMessage"></div>
 <button class="deal-button" id="dealButton" type="button">Deal</button>
 </div>
-<aside aria-label="Player actions" class="blackjack-actions play-actions play-actions-rail" id="playActions"></aside>
+<aside aria-label="Player actions" class="blackjack-actions play-actions action-rail play-actions-rail" id="playActions"></aside>
 </div>
 </div>
 <div class="balance-chart-card">
@@ -162,14 +166,19 @@
 <div class="chart-delta-pill" id="playDeltaSummary">Optimal − you: 0 units</div>
 <canvas class="balance-chart" height="175" id="playBalanceChart" width="640"></canvas>
 </div>
-<details class="play-settings">
-<summary>Session controls</summary>
-<button class="danger-link" id="resetPlay" type="button">Reset balance, history, and reshuffle</button>
-</details>
-<details class="play-settings session-review-details" id="playMistakesDetails">
+<section aria-label="Session review and controls" class="session-hub">
+<div class="session-hub-heading">
+<div>
+<strong>Session review</strong>
+<small>Review every incorrect decision from this session.</small>
+</div>
+<button class="danger-link session-reset-button" id="resetPlay" type="button">Reset session</button>
+</div>
+<details class="session-review-details session-review-list" id="playMistakesDetails">
 <summary>Incorrect decisions this session (<span id="playMistakeCount">0</span>)</summary>
 <div class="session-mistake-list" id="playMistakeList"></div>
 </details>
+</section>
 </section>
 <section class="panel challenge-panel hidden" id="challengePanel">
 <div id="challengeGame">

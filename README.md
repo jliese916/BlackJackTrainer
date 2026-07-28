@@ -47,20 +47,6 @@ Open PowerShell in this folder and run:
 
 Then open `http://localhost:8000`.
 
-## Version 11 changes
-
-- Play, Train, and Look Up tab order, with Play opening first.
-- Removed the top practice label and external strategy-profile link.
-- Renamed the table **Casa del Jefe — Blackjack Salon**.
-- Added complete, color-coded Pair, Soft, and Hard strategy tables under Look Up.
-- Added focused Train mode for pairs and A-2 through A-9.
-- Added a persistent session review for mistakes made at any decision point.
-- Added a special Blackjack Grand Master certificate for 200/200.
-- - Refined and recentered the Casa del Jefe crest.
-- Added iPhone icon and rich sharing previews with the crest.
-- Preserved simple rank-and-suit card faces.
-- Updated the Casa motto to “Train. Master. Punish.”
-- Service-worker cache: `el-jefe-blackjack-v11`.
 
 ## Version 12 changes
 
@@ -70,3 +56,23 @@ Then open `http://localhost:8000`.
 - Added the crest to the Return to Casa del Jefe link.
 - Updated chart colors for stronger contrast on the dark background.
 - Service-worker cache: `el-jefe-blackjack-v12`.
+
+
+## Version 14 changes
+
+- Added the Casa del Jefe crest card backs.
+- Restyled the Complete Basic Strategy area in the black, emerald, cream, and gold Casa palette.
+- Made all strategy tables substantially more compact.
+- Removed unnecessary cell gridlines; the rounded action chips now carry the visual structure.
+- Reduced section spacing, labels, and row heights for better mobile fit.
+- Service-worker cache: `el-jefe-blackjack-v14`.
+
+
+## Version 15 changes
+
+- Keeps Hit, Stand, Double, and Split in fixed Play positions; unavailable choices become invisible without shifting the remaining buttons.
+- Rebuilds Train with the same right-side action rail and a New Hand button below the cards.
+- Combines session reset and incorrect-decision review into one full-width Session Review card.
+- Standardizes the widths of the table, bankroll chart, and session area.
+- Includes the Casa del Jefe crest card backs and compact dark Basic Strategy tables.
+- Service-worker cache: `el-jefe-blackjack-v15`.

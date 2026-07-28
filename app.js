@@ -247,14 +247,29 @@ function availableInitialActions(cards) {
   return actions;
 }
 
-function renderActionButtons(container, actions, handler) {
+const FIXED_ACTION_ORDER = ["hit", "stand", "double", "split"];
+
+function renderActionButtons(container, actions, handler, options = {}) {
   container.replaceChildren();
-  actions.forEach((action) => {
+  const actionSet = new Set(actions);
+  const displayActions = options.fixedSlots ? FIXED_ACTION_ORDER : actions;
+
+  displayActions.forEach((action) => {
+    const available = actionSet.has(action);
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `action-button ${action}`;
+    button.className = `action-button ${action}${available ? "" : " action-unavailable"}`;
     button.textContent = ACTION_LABELS[action];
-    button.addEventListener("click", () => handler(action));
+    button.dataset.action = action;
+
+    if (available) {
+      button.addEventListener("click", () => handler(action));
+    } else {
+      button.disabled = true;
+      button.tabIndex = -1;
+      button.setAttribute("aria-hidden", "true");
+    }
+
     container.append(button);
   });
 }
@@ -284,8 +299,10 @@ function renderTrain() {
   renderHand(elements.trainDealer, [dealer[0]]);
   elements.trainDealer.append(cardElement(dealer[1], { back:true }));
   renderHand(elements.trainPlayer, player);
-  renderActionButtons(elements.trainActions, availableInitialActions(player), answerTrain);
-  [...elements.trainActions.children].forEach((button) => button.disabled = state.train.answered);
+  renderActionButtons(elements.trainActions, availableInitialActions(player), answerTrain, { fixedSlots:true });
+  [...elements.trainActions.children].forEach((button) => {
+    button.disabled = state.train.answered || button.classList.contains("action-unavailable");
+  });
   elements.trainNext.disabled = !state.train.answered;
   elements.trainScoreText.textContent = `${state.train.correct} / ${state.train.attempts}`;
   const percent = state.train.attempts ? 100 * state.train.correct / state.train.attempts : 0;
@@ -1293,7 +1310,7 @@ function renderPlay() {
     elements.playHands.append(box);
   });
 
-  if (round.stage === "player") renderActionButtons(elements.playActions, availablePlayActions(), playAction);
+  if (round.stage === "player") renderActionButtons(elements.playActions, availablePlayActions(), playAction, { fixedSlots:true });
   elements.playMessage.textContent = play.message;
   elements.dealButton.textContent = round.stage === "complete" ? "New Hand" : "Deal";
   elements.dealButton.disabled = play.busy || round.stage !== "complete";
