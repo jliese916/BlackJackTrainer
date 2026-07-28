@@ -35,7 +35,7 @@ Play mode records every incorrect hit, stand, double, or split decision, includi
 Play mode tracks two cumulative balances:
 
 - **Your play:** green above zero and red below zero.
-- **Optimal play:** a gray counterfactual line.
+- **Optimal play:** a gold counterfactual line.
 
 For each completed round, the app clones the remaining card order immediately after the initial deal and plays that round using basic strategy. The shadow round does not consume cards from the real shoe or affect later deals.
 
@@ -61,3 +61,12 @@ Then open `http://localhost:8000`.
 - Preserved simple rank-and-suit card faces.
 - Updated the Casa motto to “Train. Master. Punish.”
 - Service-worker cache: `el-jefe-blackjack-v11`.
+
+## Version 12 changes
+
+- Removed the crest watermark from the El Jefe Challenge button.
+- Mounted the crest at the center of the castle masthead.
+- Restyled bankroll history and session mistake review in the dark Casa del Jefe palette.
+- Added the crest to the Return to Casa del Jefe link.
+- Updated chart colors for stronger contrast on the dark background.
+- Service-worker cache: `el-jefe-blackjack-v12`.

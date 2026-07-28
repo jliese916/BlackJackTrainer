@@ -586,3 +586,49 @@ footer{color:var(--casa-muted)}
 .strategy-table-footnote{padding:10px 12px;border:1px solid #bda86e;border-radius:11px;background:#e9ddbd;color:#26372f!important;font-size:.76rem;font-weight:700}
 .strategy-table-footnote strong{color:#14241d}
 @media(max-width:480px){.strategy-grid{min-width:475px}.strategy-grid th,.strategy-grid td{min-width:34px;height:29px;padding:2px}.strategy-grid thead th:first-child,.strategy-grid tbody th{min-width:65px}.strategy-chip{width:22px;height:22px;border-radius:7px}}
+
+
+/* Casa del Jefe visual cohesion pass v3 */
+
+/* Keep the crest in the castle, not on the Challenge button. */
+.challenge-button::after{content:none!important;display:none!important}
+.castle-hall::after{
+  background-image:url("./jefe-crest.svg"),url("./jefe-crest.svg")!important;
+  background-position:18% 54%,82% 54%!important;
+  background-repeat:no-repeat!important;
+  background-size:68px 68px,68px 68px!important;
+  opacity:.035!important;
+}
+.masthead-crest{pointer-events:none}
+
+/* Dark Play-history surfaces shared by both trainers. */
+.balance-chart-card,.review-details,.session-review-details{
+  border-color:rgba(201,162,58,.42)!important;
+  background:linear-gradient(160deg,rgba(23,74,53,.94),rgba(7,16,13,.98))!important;
+  color:var(--casa-cream)!important;
+  box-shadow:0 14px 32px rgba(0,0,0,.28)!important;
+}
+.balance-chart-heading{color:var(--casa-gold-soft)!important}
+.balance-chart-heading small,.balance-chart-legend{color:var(--casa-muted)!important}
+.balance-chart{background:linear-gradient(to bottom,rgba(43,168,74,.09),rgba(3,17,13,.76) 50%,rgba(216,58,58,.08))!important}
+.chart-delta-pill{border-color:rgba(201,162,58,.38)!important;background:rgba(0,0,0,.28)!important;color:var(--casa-cream)!important}
+.chart-delta-pill.ahead{border-color:rgba(255,107,107,.55)!important;color:#ffb0b0!important}
+.chart-delta-pill.behind{border-color:rgba(76,207,121,.55)!important;color:#a6e9ba!important}
+.legend-actual{background:linear-gradient(90deg,#4ccf79 0 50%,#ff6b6b 50% 100%)!important}
+.legend-optimal{background:var(--casa-gold-soft)!important}
+.review-details>summary,.session-review-details>summary{color:var(--casa-gold-soft)!important}
+.play-missed-empty,.session-mistake-empty{color:var(--casa-muted)!important}
+.missed-hand-card,.session-mistake-card,.play-missed-card{
+  border-color:rgba(201,162,58,.3)!important;
+  background:linear-gradient(155deg,#123426,#0a1d16)!important;
+  color:var(--casa-cream)!important;
+  box-shadow:0 7px 18px rgba(0,0,0,.2)!important;
+}
+.missed-card-group,.missed-decision-grid>div,.missed-hold-row,.challenge-review-hand{
+  background:rgba(0,0,0,.24)!important;
+  color:var(--casa-cream)!important;
+}
+.missed-hand-number,.session-mistake-title,.missed-card-label,.missed-decision-grid span,.missed-hold-row span{color:var(--casa-muted)!important}
+.incorrect-decision{color:#ff8f8f!important}.correct-decision{color:#8ee1aa!important}
+
+.footer-link img{width:23px;height:23px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
