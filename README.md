@@ -1,4 +1,4 @@
-# El Jefe's Blackjack Trainer
+# Casa del Jefe — Blackjack Salon
 
 A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript.
 
@@ -84,3 +84,11 @@ Then open `http://localhost:8000`.
 - Uses the same centered two-by-two action grid in Play and Train on desktop and mobile.
 - Keeps Deal and New Hand centered below the action grid.
 - Service-worker cache: `el-jefe-blackjack-v17`.
+
+
+## Version 18 changes
+
+- Centers the dealer cards, player cards, action grid, and Deal button within the full Blackjack felt.
+- Keeps the compact six-deck shoe overlaid at the left without shifting the main play area.
+- Retains the fixed two-by-two Hit/Stand and Double/Split layout in Play and Train.
+- Service-worker cache: `el-jefe-blackjack-v18`.
