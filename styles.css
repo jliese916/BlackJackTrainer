@@ -977,3 +977,78 @@ footer{color:var(--casa-muted)}
   .session-hub-heading{display:grid}
   .session-reset-button{justify-self:start}
 }
+
+
+/* Version 16: fixed horizontal action rows in Play and Train */
+.action-row{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  align-items:stretch!important;
+  gap:8px!important;
+  width:min(470px,100%)!important;
+  min-height:46px!important;
+  margin:10px auto 9px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+.action-row .action-button{
+  width:100%!important;
+  min-width:0!important;
+  min-height:46px!important;
+  margin:0!important;
+  padding:8px 5px!important;
+  border-color:rgba(216,181,100,.58)!important;
+  background:linear-gradient(180deg,#fffdf8,#eee4cb)!important;
+  color:#203128!important;
+  font-size:.82rem!important;
+}
+.action-row .action-button.double{color:#74570b!important}
+.action-row .action-button.split{color:#5e369d!important}
+.action-row .action-unavailable{
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+.train-playfield{
+  display:block!important;
+  width:min(570px,100%)!important;
+  margin:14px auto 0!important;
+}
+.train-table-main{width:100%!important}
+.train-actions-row{margin-top:9px!important}
+.train-next-button{
+  display:block!important;
+  align-self:auto!important;
+  min-width:150px!important;
+  margin:0 auto!important;
+}
+.play-actions-row{margin-top:4px!important}
+.table-main .deal-button{
+  display:block!important;
+  align-self:auto!important;
+  min-width:150px!important;
+  margin:0 auto!important;
+}
+@media(max-width:480px){
+  .table-layout{
+    grid-template-columns:52px minmax(0,1fr)!important;
+    gap:4px!important;
+  }
+  .table-main{grid-column:2!important}
+  .action-row{
+    gap:5px!important;
+    min-height:42px!important;
+    margin-block:8px!important;
+  }
+  .action-row .action-button{
+    min-height:42px!important;
+    padding-inline:2px!important;
+    font-size:.69rem!important;
+  }
+}
+@media(max-width:360px){
+  .table-layout{grid-template-columns:46px minmax(0,1fr)!important;gap:2px!important}
+  .action-row{gap:4px!important}
+  .action-row .action-button{font-size:.61rem!important;padding-inline:1px!important}
+}

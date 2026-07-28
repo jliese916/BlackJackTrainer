@@ -1,6 +1,6 @@
 {
-  "name": "El Jefe's Blackjack Trainer",
-  "short_name": "El Jefe BJ",
+  "name": "Casa del Jefe \u2014 Blackjack Salon",
+  "short_name": "Blackjack Salon",
   "description": "Blackjack strategy training, complete lookup tables, session mistake review, and the El Jefe Challenge.",
   "start_url": "./",
   "scope": "./",

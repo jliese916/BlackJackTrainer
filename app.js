@@ -1270,7 +1270,7 @@ function renderPlay() {
 
   elements.playDealer.replaceChildren();
   elements.playHands.replaceChildren();
-  elements.playActions.replaceChildren();
+  renderActionButtons(elements.playActions, [], () => {}, { fixedSlots:true });
   elements.dealerTotal.textContent = "";
 
   const round = play.round;
