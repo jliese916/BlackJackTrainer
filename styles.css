@@ -121,7 +121,7 @@ h1{margin:5px 0;font-size:clamp(1.6rem,6vw,2.35rem);letter-spacing:-.035em}
 .play-topline>div{display:grid;align-content:start;gap:2px;min-width:0}.play-topline small{color:#d1fae5}.play-topline strong{color:#fff}
 .play-topline strong.positive{color:#bbf7d0}.play-topline strong.negative{color:#fecaca}
 .play-zone,.player-hands,.play-actions,.play-message,.deal-button{position:relative;z-index:1}.play-zone{display:grid;justify-items:center}.play-zone .hand{justify-content:center}
-.table-total{min-height:1.2rem;color:#f8fafc;font-weight:850}
+.table-total{height:1.35rem;line-height:1.35rem;overflow:hidden;color:#f8fafc;font-weight:850}
 .player-hands{display:flex;justify-content:center;align-items:flex-start;align-content:flex-start;gap:10px;flex:1 1 auto;flex-wrap:wrap;min-height:150px;margin-top:8px}
 .player-hand-box{min-width:145px;padding:10px 8px;border:2px solid transparent;border-radius:14px;background:rgba(255,255,255,.1)}
 .player-hand-box.active{border-color:#f8df87;background:rgba(255,255,255,.17)}

@@ -92,3 +92,10 @@ Then open `http://localhost:8000`.
 - Keeps the compact six-deck shoe overlaid at the left without shifting the main play area.
 - Retains the fixed two-by-two Hit/Stand and Double/Split layout in Play and Train.
 - Service-worker cache: `el-jefe-blackjack-v18`.
+
+## Version 19 changes
+
+- Reserves a fixed-height dealer-total/status slot in Play mode.
+- Prevents the dealer total appearing after the hole card is revealed from nudging the cards, action buttons, or Deal button.
+- Normal one-hit and stand hands remain stationary; genuine card wrapping can still increase the hand area as intended.
+- Service-worker cache: `el-jefe-blackjack-v19`.
