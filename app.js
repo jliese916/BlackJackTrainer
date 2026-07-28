@@ -4,6 +4,7 @@ const RANKS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 const SUITS = ["♥","♦","♣","♠"];
 const SUIT_CLASSES = ["suit-hearts","suit-diamonds","suit-clubs","suit-spades"];
 const ACTION_LABELS = { hit:"Hit", stand:"Stand", double:"Double", split:"Split" };
+const ACTION_SHORTCUTS = { hit:"H", stand:"S", double:"D", split:"P" };
 const TOTAL_CARDS = 312;
 const BASE_WAGER = 1;
 
@@ -260,6 +261,8 @@ function renderActionButtons(container, actions, handler, options = {}) {
     button.type = "button";
     button.className = `action-button ${action}${available ? "" : " action-unavailable"}`;
     button.setAttribute("aria-label", ACTION_LABELS[action]);
+    button.setAttribute("aria-keyshortcuts", ACTION_SHORTCUTS[action]);
+    button.title = `${ACTION_LABELS[action]} (${ACTION_SHORTCUTS[action]})`;
     const key = document.createElement("span");
     key.className = `action-key strategy-${action}`;
     key.textContent = action === "split" ? "P" : action[0].toUpperCase();
@@ -1562,6 +1565,52 @@ elements.resetPlay.addEventListener("click", () => {
 });
 elements.challengeLaunch.addEventListener("click", startChallenge);
 elements.challengeExit.addEventListener("click", exitChallenge);
+
+function isTypingTarget(target) {
+  return target instanceof HTMLElement && (
+    target.matches("input, textarea, select") || target.isContentEditable
+  );
+}
+
+function clickAvailableAction(container, action) {
+  const button = container?.querySelector(`button[data-action="${action}"]`);
+  if (!button || button.disabled || button.classList.contains("action-unavailable")) return false;
+  button.click();
+  return true;
+}
+
+function handleKeyboardShortcut(event) {
+  if (event.defaultPrevented || event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
+  if (isTypingTarget(event.target)) return;
+
+  const action = ({ h:"hit", s:"stand", d:"double", p:"split" })[event.key.toLowerCase()];
+  if (action) {
+    const container = state.challenge.active
+      ? elements.challengeActions
+      : state.mode === "play"
+        ? elements.playActions
+        : state.mode === "train"
+          ? elements.trainActions
+          : null;
+
+    if (container && clickAvailableAction(container, action)) {
+      event.preventDefault();
+    }
+    return;
+  }
+
+  if (event.key !== "Enter" || state.challenge.active) return;
+
+  if (state.mode === "play" && !elements.dealButton.disabled) {
+    event.preventDefault();
+    elements.dealButton.click();
+  } else if (state.mode === "train" && !elements.trainNext.disabled) {
+    event.preventDefault();
+    elements.trainNext.click();
+  }
+}
+
+window.addEventListener("keydown", handleKeyboardShortcut);
 window.addEventListener("resize", () => {
   if (state.mode === "play") window.requestAnimationFrame(drawBalanceChart);
 });

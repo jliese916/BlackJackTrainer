@@ -107,3 +107,12 @@ Then open `http://localhost:8000`.
 - Each neutral action button contains the same color-coded letter badge used in the strategy tables: H, S, D, and P.
 - Fixed action positions and the two-row layout are unchanged.
 - Service-worker cache: `el-jefe-blackjack-v20`.
+
+## Version 21 changes
+
+- Added keyboard shortcuts for desktop and external-keyboard play.
+- **H**, **S**, **D**, and **P** activate Hit, Stand, Double, and Split only when the action is currently legal.
+- **Enter** deals or starts a new Play hand; in Train it advances after an answer.
+- The same H/S/D/P shortcuts also work during Train and the El Jefe Challenge.
+- Shortcuts reuse the actual on-screen buttons, so all availability checks, scoring, and mistake logging remain identical to mouse or touch input.
+- Service-worker cache: `el-jefe-blackjack-v21`.
