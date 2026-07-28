@@ -390,10 +390,13 @@ const STRATEGY_ACTION_NAMES = { hit:"Hit", stand:"Stand", double:"Double", split
 
 function strategyTableCell(action) {
   const cell = document.createElement("td");
-  cell.className = `strategy-action strategy-${action}`;
-  cell.textContent = STRATEGY_ACTION_CODES[action];
+  cell.className = "strategy-action";
   cell.title = STRATEGY_ACTION_NAMES[action];
   cell.setAttribute("aria-label", STRATEGY_ACTION_NAMES[action]);
+  const chip = document.createElement("span");
+  chip.className = `strategy-chip strategy-${action}`;
+  chip.textContent = STRATEGY_ACTION_CODES[action];
+  cell.append(chip);
   return cell;
 }
 
@@ -448,7 +451,7 @@ function renderStrategyTables() {
   const intro = document.createElement("div");
   intro.className = "strategy-table-intro";
   intro.innerHTML = `
-    <p>Use the pair table first, then soft totals, then hard totals. Dealer upcards run across the top; this chart shows the two-card decision.</p>
+    <p>Choose the table that matches your hand: Hard Totals, Soft Totals, or Pairs. Dealer upcards run across the top; each cell shows the correct two-card decision.</p>
     <div class="strategy-legend" aria-label="Strategy action legend">
       <span class="strategy-hit"><b>H</b> Hit</span>
       <span class="strategy-stand"><b>S</b> Stand</span>
@@ -482,13 +485,13 @@ function renderStrategyTables() {
 
   const footnote = document.createElement("p");
   footnote.className = "strategy-table-footnote";
-  footnote.textContent = "* Face-card pairs follow the 10-10 row. Surrender is not offered. When doubling or splitting is unavailable, the trainer recalculates the best legal action.";
+  footnote.innerHTML = "<strong>10-10 rule:</strong> Face-card pairs follow the 10-10 row. Surrender is not offered. When doubling or splitting is unavailable, the trainer recalculates the best legal action.";
 
   elements.strategyTableContainer.append(
     intro,
-    buildStrategySection("Pairs", "Split decisions take priority over the hand total.", pairRows),
-    buildStrategySection("Soft totals", "An ace is being counted as 11.", softRows),
-    buildStrategySection("Hard totals", "Use this table when the hand is neither a pair nor soft.", hardRows),
+    buildStrategySection("Hard Totals", "Use this table when the hand is neither soft nor a pair.", hardRows),
+    buildStrategySection("Soft Totals", "Use this table when an ace is being counted as 11.", softRows),
+    buildStrategySection("Pairs", "Use this table when your first two cards have the same rank.", pairRows),
     footnote
   );
 }

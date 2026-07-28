@@ -47,7 +47,7 @@ Open PowerShell in this folder and run:
 
 Then open `http://localhost:8000`.
 
-## Version 8 changes
+## Version 11 changes
 
 - Play, Train, and Look Up tab order, with Play opening first.
 - Removed the top practice label and external strategy-profile link.
@@ -56,4 +56,8 @@ Then open `http://localhost:8000`.
 - Added focused Train mode for pairs and A-2 through A-9.
 - Added a persistent session review for mistakes made at any decision point.
 - Added a special Blackjack Grand Master certificate for 200/200.
-- Service-worker cache: `el-jefe-blackjack-v9`.
+- - Refined and recentered the Casa del Jefe crest.
+- Added iPhone icon and rich sharing previews with the crest.
+- Preserved simple rank-and-suit card faces.
+- Updated the Casa motto to “Train. Master. Punish.”
+- Service-worker cache: `el-jefe-blackjack-v11`.

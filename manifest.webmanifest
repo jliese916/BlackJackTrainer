@@ -1,7 +1,7 @@
 {
   "name": "El Jefe's Blackjack Trainer",
   "short_name": "El Jefe BJ",
-  "description": "Blackjack strategy training, complete lookup tables, six-deck play, session mistake review, and the El Jefe Challenge.",
+  "description": "Blackjack strategy training, complete lookup tables, session mistake review, and the El Jefe Challenge.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -11,12 +11,14 @@
     {
       "src": "./icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "./icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

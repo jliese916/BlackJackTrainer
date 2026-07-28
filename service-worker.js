@@ -1,4 +1,4 @@
-const CACHE_NAME = "el-jefe-blackjack-v9";
+const CACHE_NAME = "el-jefe-blackjack-v11";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,7 +7,10 @@ const APP_SHELL = [
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./og-blackjack.png",
+  "./favicon-64.png",
+  "./jefe-crest.svg"
 ];
 
 self.addEventListener("install", (event) => {
