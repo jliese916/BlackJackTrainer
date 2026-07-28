@@ -1,4 +1,4 @@
-# Casa del Jefe — Blackjack Salon
+# El Jefe's Blackjack Trainer
 
 A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript.
 
@@ -77,11 +77,10 @@ Then open `http://localhost:8000`.
 - Includes the Casa del Jefe crest card backs and compact dark Basic Strategy tables.
 - Service-worker cache: `el-jefe-blackjack-v15`.
 
+## Version 17 changes
 
-## Version 16 changes
-
-- Renames the castle room title to **Blackjack Salon**.
-- Places Hit, Stand, Double, and Split in one fixed horizontal row in both Play and Train.
-- Keeps all four button slots reserved so unavailable actions disappear without moving the others.
-- Places Deal/New Hand directly below the action row on desktop and mobile.
-- Service-worker cache: `el-jefe-blackjack-v16`.
+- Places Hit and Stand in a fixed top row, with Double and Split in a fixed second row.
+- Unavailable actions remain invisible without shifting the other buttons.
+- Uses the same centered two-by-two action grid in Play and Train on desktop and mobile.
+- Keeps Deal and New Hand centered below the action grid.
+- Service-worker cache: `el-jefe-blackjack-v17`.
