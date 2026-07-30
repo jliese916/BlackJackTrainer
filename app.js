@@ -650,8 +650,8 @@ function newPlaySession() {
     balanceHistory:[0],
     optimalBalanceHistory:[0],
     completedRounds:0,
-    playAttempts:0,
-    playCorrect:0,
+    scoredHands:0,
+    perfectHands:0,
     mistakes:[],
     shoe,
     shoePosition:0,
@@ -677,16 +677,16 @@ function loadPlaySession() {
       const completedRounds = Number.isFinite(stored.completedRounds)
         ? stored.completedRounds
         : Math.max(0, Math.min(balanceHistory.length, optimalBalanceHistory.length) - 1);
-      const savedAttemptsRaw = localStorage.getItem("blackjackPlayAttempts");
-      const savedCorrectRaw = localStorage.getItem("blackjackPlayCorrect");
-      const savedAttempts = savedAttemptsRaw === null ? NaN : Number(savedAttemptsRaw);
-      const savedCorrect = savedCorrectRaw === null ? NaN : Number(savedCorrectRaw);
-      const playAttempts = Number.isFinite(savedAttempts)
-        ? savedAttempts
-        : (Number.isFinite(stored.playAttempts) ? stored.playAttempts : 0);
-      const playCorrect = Number.isFinite(savedCorrect)
-        ? savedCorrect
-        : (Number.isFinite(stored.playCorrect) ? stored.playCorrect : 0);
+      const savedScoredHandsRaw = localStorage.getItem("blackjackPlayScoredHands");
+      const savedPerfectHandsRaw = localStorage.getItem("blackjackPlayPerfectHands");
+      const savedScoredHands = savedScoredHandsRaw === null ? NaN : Number(savedScoredHandsRaw);
+      const savedPerfectHands = savedPerfectHandsRaw === null ? NaN : Number(savedPerfectHandsRaw);
+      const scoredHands = Number.isFinite(savedScoredHands)
+        ? savedScoredHands
+        : (Number.isFinite(stored.scoredHands) ? stored.scoredHands : 0);
+      const perfectHands = Number.isFinite(savedPerfectHands)
+        ? savedPerfectHands
+        : (Number.isFinite(stored.perfectHands) ? stored.perfectHands : 0);
       const mistakes = Array.isArray(stored.mistakes)
         ? stored.mistakes.filter((mistake) => mistake && Number.isFinite(mistake.handNumber) && Array.isArray(mistake.player))
         : [];
@@ -697,8 +697,8 @@ function loadPlaySession() {
         balanceHistory:balanceHistory.length ? balanceHistory : [balance],
         optimalBalanceHistory:optimalBalanceHistory.length ? optimalBalanceHistory : [optimalBalance],
         completedRounds,
-        playAttempts,
-        playCorrect,
+        scoredHands,
+        perfectHands,
         mistakes,
         round:null,
         busy:false,
@@ -716,15 +716,15 @@ function savePlaySession() {
     balanceHistory:state.play.balanceHistory,
     optimalBalanceHistory:state.play.optimalBalanceHistory,
     completedRounds:state.play.completedRounds,
-    playAttempts:state.play.playAttempts,
-    playCorrect:state.play.playCorrect,
+    scoredHands:state.play.scoredHands,
+    perfectHands:state.play.perfectHands,
     mistakes:state.play.mistakes,
     shoe:state.play.shoe,
     shoePosition:state.play.shoePosition,
     cutPosition:state.play.cutPosition
   }));
-  localStorage.setItem("blackjackPlayAttempts", String(state.play.playAttempts));
-  localStorage.setItem("blackjackPlayCorrect", String(state.play.playCorrect));
+  localStorage.setItem("blackjackPlayScoredHands", String(state.play.scoredHands));
+  localStorage.setItem("blackjackPlayPerfectHands", String(state.play.perfectHands));
 }
 
 function clearPlayDecisionIndicator() {
@@ -736,7 +736,7 @@ function clearPlayDecisionIndicator() {
 function flashPlayDecisionIndicator(wasCorrect) {
   const symbol = wasCorrect ? "+" : "−";
   const resultClass = wasCorrect ? "correct" : "incorrect";
-  const spokenText = wasCorrect ? "Correct basic-strategy decision" : "Incorrect basic-strategy decision";
+  const spokenText = wasCorrect ? "Perfectly played hand" : "Hand contained an incorrect basic-strategy decision";
 
   elements.playDecisionIndicator.textContent = symbol;
   elements.playDecisionIndicator.setAttribute("aria-label", spokenText);
@@ -753,10 +753,8 @@ function recordPlayDecision(action, hand, availableActions) {
   const wasCorrect = action === correctAction;
 
   round.decisionCount = (round.decisionCount || 0) + 1;
-  state.play.playAttempts += 1;
-  if (wasCorrect) {
-    state.play.playCorrect += 1;
-  } else {
+  round.allDecisionsCorrect = round.allDecisionsCorrect !== false && wasCorrect;
+  if (!wasCorrect) {
     const splitHandIndex = round.hands.indexOf(hand);
     state.play.mistakes.push({
       handNumber: round.sessionHandNumber || state.play.completedRounds + 1,
@@ -769,7 +767,6 @@ function recordPlayDecision(action, hand, availableActions) {
     });
   }
   savePlaySession();
-  flashPlayDecisionIndicator(wasCorrect);
   return wasCorrect;
 }
 
@@ -811,6 +808,12 @@ function recordCompletedRound() {
   state.play.balanceHistory.push(state.play.balance);
   state.play.optimalBalanceHistory.push(state.play.optimalBalance);
   state.play.completedRounds += 1;
+  if ((round.decisionCount || 0) > 0 && !round.accuracyRecorded) {
+    state.play.scoredHands += 1;
+    if (round.allDecisionsCorrect !== false) state.play.perfectHands += 1;
+    round.accuracyRecorded = true;
+    flashPlayDecisionIndicator(round.allDecisionsCorrect !== false);
+  }
   round.historyRecorded = true;
   savePlaySession();
 }
@@ -829,6 +832,8 @@ async function dealPlayRound() {
     activeIndex:0,
     sessionHandNumber:state.play.completedRounds + 1,
     decisionCount:0,
+    allDecisionsCorrect:true,
+    accuracyRecorded:false,
     balanceBefore,
     optimalNet:null,
     historyRecorded:false
@@ -1256,9 +1261,12 @@ function renderPlay() {
   const play = state.play;
   renderPlayMistakes();
   elements.playBalance.textContent = formatUnits(play.balance);
-  const playAccuracy = play.playAttempts ? 100 * play.playCorrect / play.playAttempts : 0;
+  const playAccuracy = play.scoredHands ? 100 * play.perfectHands / play.scoredHands : 0;
   elements.playAccuracy.textContent = `${playAccuracy.toFixed(1)}%`;
-  elements.playAccuracy.setAttribute("title", `${play.playCorrect} correct of ${play.playAttempts} decisions`);
+  elements.playAccuracy.setAttribute(
+    "title",
+    `${play.perfectHands} perfectly played of ${play.scoredHands} ${play.scoredHands === 1 ? "hand" : "hands"} with decisions`
+  );
   elements.playBalance.classList.toggle("positive", play.balance > 0);
   elements.playBalance.classList.toggle("negative", play.balance < 0);
 

@@ -4,7 +4,7 @@ A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript
 
 ## Modes
 
-- **Play:** full blackjack hands from a persistent six-deck shoe, with basic-strategy accuracy, session mistake review, and an optimal-play bankroll comparison.
+- **Play:** full blackjack hands from a persistent six-deck shoe, with perfectly-played-hand accuracy, session mistake review, and an optimal-play bankroll comparison.
 - **Train:** first-decision strategy practice with an optional filter for pairs and soft A-2 through A-9 hands.
 - **Look Up:** enter a dealer upcard and two player cards, or open the complete in-app basic-strategy tables.
 - **El Jefe Challenge:** 200 silent-scored decisions; 196 correct answers (98%) are required to pass. A perfect score earns the Blackjack Grand Master certificate.
@@ -116,3 +116,13 @@ Then open `http://localhost:8000`.
 - The same H/S/D/P shortcuts also work during Train and the El Jefe Challenge.
 - Shortcuts reuse the actual on-screen buttons, so all availability checks, scoring, and mistake logging remain identical to mouse or touch input.
 - Service-worker cache: `el-jefe-blackjack-v21`.
+
+
+## Version 22 changes
+
+- Eliminated horizontal recentering when switching among Play, Train, and Look Up by reserving the scrollbar gutter.
+- Made the masthead crest link back to the Casa del Jefe home page.
+- Changed Play accuracy from per-decision scoring to the percentage of completed decision hands played perfectly; split rounds count as one hand and require every decision to be correct.
+- Moved the blackjack rule profile into a collapsible Game Rules & Details panel.
+- Simplified the Look Up card-area labels to Dealer and Player.
+- Service-worker cache: `el-jefe-blackjack-v22`.

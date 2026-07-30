@@ -36,9 +36,21 @@
 </div>
 <div class="castle-hall">
 <div aria-hidden="true" class="hall-crenels"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-<img alt="" aria-hidden="true" class="masthead-crest" src="./jefe-crest.svg"/><div class="castle-kicker">Casa del Jefe</div>
+<a aria-label="Return to Casa del Jefe" class="masthead-crest-link" href="https://jliese916.github.io/">
+<img alt="" aria-hidden="true" class="masthead-crest" src="./jefe-crest.svg"/>
+</a><div class="castle-kicker">Casa del Jefe</div>
 <h1>Blackjack Salon</h1>
-<p class="rule-summary">6 decks · dealer hits soft 17 · double after split · no surrender · blackjack pays 6:5</p>
+<details class="header-paytable game-details">
+<summary>Game Rules &amp; Details</summary>
+<div aria-label="Blackjack game rules" class="header-paytable-grid game-details-grid">
+<span>Decks</span><strong>4 to 8 Decks</strong>
+<span>Dealer check</span><strong>American Style (dealer peeks on Ace or face)</strong>
+<span>Soft 17</span><strong>Dealer Hits Soft 17</strong>
+<span>Doubling</span><strong>Double After Split Allowed</strong>
+<span>Surrender</span><strong>No Surrender</strong>
+<span>Blackjack</span><strong>Pays 6:5</strong>
+</div>
+</details>
 </div>
 <div aria-hidden="true" class="castle-tower tower-right">
 <div class="tower-crenels"><i></i><i></i><i></i></div>
@@ -93,11 +105,11 @@
 <div class="lookup-entry">
 <div class="lookup-targets">
 <button class="lookup-target active" id="lookupDealerTarget" type="button">
-<span class="lookup-target-label">Dealer card</span>
+<span class="lookup-target-label">Dealer</span>
 <span class="lookup-card-slots" id="lookupDealerSlot"></span>
 </button>
 <button class="lookup-target" id="lookupPlayerTarget" type="button">
-<span class="lookup-target-label">Player cards</span>
+<span class="lookup-target-label">Player</span>
 <span class="lookup-card-slots" id="lookupPlayerSlots"></span>
 </button>
 </div>
