@@ -1357,7 +1357,7 @@ function renderChallenge() {
   renderHand(elements.challengeDealer, [c.scenario.dealer[0]]);
   elements.challengeDealer.append(cardElement(c.scenario.dealer[1], { back:true }));
   renderHand(elements.challengePlayer, c.scenario.player);
-  renderActionButtons(elements.challengeActions, availableInitialActions(c.scenario.player), answerChallenge);
+  renderActionButtons(elements.challengeActions, availableInitialActions(c.scenario.player), answerChallenge, { fixedSlots:true });
 }
 
 function answerChallenge(action) {

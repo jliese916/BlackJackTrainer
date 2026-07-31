@@ -1095,7 +1095,7 @@ footer{color:var(--casa-muted)}
   pointer-events:none!important;
 }
 .train-actions-grid{margin-top:9px!important}
-.play-actions-grid{margin-top:3px!important}
+.play-actions-grid,.challenge-actions-grid{margin-top:3px!important}
 .train-next-button,.table-main .deal-button{
   display:block!important;
   align-self:auto!important;

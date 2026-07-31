@@ -126,3 +126,9 @@ Then open `http://localhost:8000`.
 - Moved the blackjack rule profile into a collapsible Game Rules & Details panel.
 - Simplified the Look Up card-area labels to Dealer and Player.
 - Service-worker cache: `el-jefe-blackjack-v22`.
+
+## Version 23 changes
+
+- El Jefe Challenge action buttons now use the same two-by-two labeled button design as Play.
+- Challenge keeps the same fixed action slots as Play, with unavailable Split hidden.
+- Service-worker cache: `el-jefe-blackjack-v23`.
