@@ -9,10 +9,10 @@
 <meta content="default" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Blackjack Salon" name="apple-mobile-web-app-title"/>
 <title>Casa del Jefe — Blackjack Salon</title>
-<meta content="Blackjack strategy training, complete lookup tables, session mistake review, and the El Jefe Challenge." name="description"/>
+<meta content="Full-hand blackjack strategy training, complete lookup tables, session mistake review, and the 200-hand El Jefe Challenge." name="description"/>
 <meta content="website" property="og:type"/>
 <meta content="Casa del Jefe — Blackjack Salon" property="og:title"/>
-<meta content="Blackjack strategy training, complete lookup tables, session mistake review, and the El Jefe Challenge." property="og:description"/>
+<meta content="Full-hand blackjack strategy training, complete lookup tables, session mistake review, and the 200-hand El Jefe Challenge." property="og:description"/>
 <meta content="https://jliese916.github.io/BlackJackTrainer/" property="og:url"/>
 <meta content="https://jliese916.github.io/BlackJackTrainer/og-blackjack.png" property="og:image"/>
 <meta content="1200" property="og:image:width"/>
@@ -20,7 +20,7 @@
 <meta content="Casa del Jefe Blackjack Salon trainer" property="og:image:alt"/>
 <meta content="summary_large_image" name="twitter:card"/>
 <meta content="Casa del Jefe — Blackjack Salon" name="twitter:title"/>
-<meta content="Blackjack strategy training, complete lookup tables, session mistake review, and the El Jefe Challenge." name="twitter:description"/>
+<meta content="Full-hand blackjack strategy training, complete lookup tables, session mistake review, and the 200-hand El Jefe Challenge." name="twitter:description"/>
 <meta content="https://jliese916.github.io/BlackJackTrainer/og-blackjack.png" name="twitter:image"/>
 <link href="./manifest.webmanifest" rel="manifest"/>
 <link href="./favicon-64.png" rel="icon" type="image/png"/>
@@ -69,36 +69,37 @@
 <button class="mode-tab" data-mode="lookup" type="button">Look Up</button>
 </nav>
 <section class="panel hidden" id="trainPanel">
-<p>Choose the best first decision.</p>
+<p>Play each hand to completion. A hand counts as correct only when every decision is perfect; split hands count separately.</p>
 <label class="train-focus-toggle" for="trainFocusedHands">
 <input id="trainFocusedHands" type="checkbox"/>
 <span>
 <strong>Train only soft hands and pairs</strong>
-<small>Deals only pairs or A-2 through A-9.</small>
+<small>Initial deals are limited to pairs or A-2 through A-9.</small>
 </span>
 </label>
 <div class="train-playfield">
 <div class="train-table-main">
 <div class="practice-table train-practice-table" id="trainTable">
+<div aria-label="Training accuracy" class="table-accuracy-bubble train-accuracy-bubble">
+<small>Accuracy</small>
+<strong id="trainPercent">0.0%</strong>
+<span id="trainScoreText">0 / 0 hands</span>
+</div>
 <div class="dealer-zone">
 <div class="zone-label">Dealer</div>
 <div class="hand" id="trainDealer"></div>
+<div class="practice-total" id="trainDealerTotal"></div>
 </div>
-<div class="player-zone">
-<div class="zone-label">You</div>
-<div class="hand" id="trainPlayer"></div>
-</div>
-</div>
+<div class="practice-player-hands" id="trainHands"></div>
 <div aria-live="polite" class="feedback" id="trainFeedback"></div>
 <div aria-label="Training actions" class="blackjack-actions action-grid train-actions-grid" id="trainActions"></div>
 <button class="deal-button train-next-button" id="trainNext" type="button">New Hand</button>
 </div>
 </div>
+</div>
 </section>
-<section class="score-card hidden" id="trainScore">
-<div><small>Score</small><strong id="trainScoreText">0 / 0</strong></div>
-<div><small>Percentage</small><strong id="trainPercent">0.0%</strong></div>
-<button class="link-button" id="resetTrainScore" type="button">Reset score</button>
+<section class="train-score-controls hidden" id="trainScore">
+<button class="link-button" id="resetTrainScore" type="button">Reset accuracy</button>
 </section>
 <section class="panel hidden" id="lookupPanel">
 <p>Choose the dealer's upcard and your two cards.</p>
@@ -125,20 +126,20 @@
 </section>
 <section class="panel play-panel" id="playPanel">
 <div class="mandalay-table">
-<div aria-label="Casa del Jefe blackjack table" class="mandalay-wordmark">
-<span>CASA DEL JEFE</span>
-<small>BLACKJACK SALON</small>
-</div>
-<div aria-label="Play statistics" class="play-topline">
-<div><small>Balance</small><strong id="playBalance">0.0 units</strong></div>
-<div class="play-accuracy-stat">
+<div aria-label="Play accuracy" class="table-accuracy-bubble play-accuracy-stat">
 <small>Accuracy</small>
 <span class="play-accuracy-line">
 <strong id="playAccuracy">0.0%</strong>
 <span aria-live="polite" class="play-decision-indicator" id="playDecisionIndicator"></span>
 </span>
 </div>
-<div><small>Wager</small><strong>1 unit</strong></div>
+<div aria-label="Casa del Jefe blackjack table" class="mandalay-wordmark">
+<span>CASA DEL JEFE</span>
+<small>BLACKJACK SALON</small>
+</div>
+<div aria-label="Play statistics" class="play-topline play-topline-two">
+<div><small>Balance</small><strong id="playBalance">0.0 units</strong></div>
+<div><small>Bet</small><strong>1 unit</strong></div>
 </div>
 <div class="table-layout">
 <aside aria-label="Six-deck shoe" class="table-left-rail">
@@ -201,18 +202,16 @@
 </div>
 <button class="challenge-exit" id="challengeExit" type="button">Exit</button>
 </div>
-<p>No feedback until the final score. You need 196 correct answers (98%) to pass.</p>
-<div class="practice-table">
+<p>No feedback until the final score. Every resolved hand counts, and split hands count separately. You need 196 correct hands (98%) to pass.</p>
+<div class="practice-table challenge-practice-table">
 <div class="dealer-zone">
 <div class="zone-label">Dealer</div>
 <div class="hand" id="challengeDealer"></div>
+<div class="practice-total" id="challengeDealerTotal"></div>
 </div>
-<div class="player-zone">
-<div class="zone-label">You</div>
-<div class="hand" id="challengePlayer"></div>
-</div>
-</div>
+<div class="practice-player-hands" id="challengeHands"></div>
 <div aria-label="Challenge actions" class="blackjack-actions action-grid challenge-actions-grid" id="challengeActions"></div>
+</div>
 </div>
 <div class="hidden" id="challengeSummary"></div>
 <div aria-live="polite" class="challenge-review hidden" id="challengeReview"></div>

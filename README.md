@@ -5,9 +5,9 @@ A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript
 ## Modes
 
 - **Play:** full blackjack hands from a persistent six-deck shoe, with perfectly-played-hand accuracy, session mistake review, and an optimal-play bankroll comparison.
-- **Train:** first-decision strategy practice with an optional filter for pairs and soft A-2 through A-9 hands.
+- **Train:** complete-hand strategy practice. Accuracy is awarded only when every decision on a resolved hand is correct; split hands count separately. An optional filter limits initial deals to pairs and soft A-2 through A-9 hands.
 - **Look Up:** enter a dealer upcard and two player cards, or open the complete in-app basic-strategy tables.
-- **El Jefe Challenge:** 200 silent-scored decisions; 196 correct answers (98%) are required to pass. A perfect score earns the Blackjack Grand Master certificate.
+- **El Jefe Challenge:** 200 silent-scored completed hands; split hands count separately. At least 196 correct hands (98%) are required to pass, and a perfect 200 earns the Blackjack Grand Master certificate.
 
 ## Rule profile
 
@@ -132,3 +132,15 @@ Then open `http://localhost:8000`.
 - El Jefe Challenge action buttons now use the same two-by-two labeled button design as Play.
 - Challenge keeps the same fixed action slots as Play, with unavailable Split hidden.
 - Service-worker cache: `el-jefe-blackjack-v23`.
+
+
+## Version 24 changes
+
+- Restyled the Blackjack table wordmark to match the Three Card Poker Club table.
+- Moved Play accuracy into a centered table-top bubble and centered the percentage under its label.
+- Changed the table statistic label from **Wager** to **Bet**.
+- Rebuilt Train mode around complete hands rather than first decisions. A hand receives credit only when every decision is correct.
+- Split and resplit results are scored as separate final hands, inheriting the accuracy of the decisions that created them.
+- Rebuilt the El Jefe Challenge as 200 completed hands with split hands counted separately; the 98% passing threshold remains 196 of 200.
+- Matched the perfect Blackjack Grand Master certificate to the Three Card Poker certificate design.
+- Service-worker cache: `el-jefe-blackjack-v24`.

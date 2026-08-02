@@ -15,7 +15,8 @@ const elements = {
   trainPanel: $("#trainPanel"),
   trainScore: $("#trainScore"),
   trainDealer: $("#trainDealer"),
-  trainPlayer: $("#trainPlayer"),
+  trainDealerTotal: $("#trainDealerTotal"),
+  trainHands: $("#trainHands"),
   trainActions: $("#trainActions"),
   trainFeedback: $("#trainFeedback"),
   trainNext: $("#trainNext"),
@@ -60,7 +61,8 @@ const elements = {
   challengeReview: $("#challengeReview"),
   challengeProgress: $("#challengeProgress"),
   challengeDealer: $("#challengeDealer"),
-  challengePlayer: $("#challengePlayer"),
+  challengeDealerTotal: $("#challengeDealerTotal"),
+  challengeHands: $("#challengeHands"),
   challengeActions: $("#challengeActions"),
   challengeExit: $("#challengeExit")
 };
@@ -68,15 +70,14 @@ const elements = {
 const state = {
   mode: "play",
   train: {
-    scenario: null,
-    answered: false,
+    round: null,
     focusedHands: localStorage.getItem("blackjackTrainFocusedHands") === "true",
     attempts: Number(localStorage.getItem("blackjackTrainAttempts") || 0),
     correct: Number(localStorage.getItem("blackjackTrainCorrect") || 0)
   },
   lookup: { dealer:null, player:[], target:"dealer" },
   play: loadPlaySession(),
-  challenge: { active:false, number:1, correct:0, scenario:null, finished:false, misses:[] }
+  challenge: { active:false, completedHands:0, correct:0, round:null, finished:false, misses:[] }
 };
 
 function randomUint(maxExclusive) {
@@ -231,15 +232,45 @@ function isFocusedTrainingHand(cards) {
   return otherRank >= 0 && otherRank <= 7; // A-2 through A-9
 }
 
-function scenarioFromFreshShoe(options = {}) {
+function newPracticeHand(cards, options = {}) {
+  return {
+    cards:[...cards],
+    status:options.status || "active",
+    fromSplit:options.fromSplit === true,
+    splitAces:options.splitAces === true,
+    outcome:"",
+    allDecisionsCorrect:options.allDecisionsCorrect !== false,
+    decisionCount:Number.isFinite(options.decisionCount) ? options.decisionCount : 0,
+    mistakes:Array.isArray(options.mistakes) ? options.mistakes.map((mistake) => ({ ...mistake, player:[...mistake.player] })) : []
+  };
+}
+
+function practiceRoundFromFreshShoe(options = {}) {
   while (true) {
     const cards = sixDeckShoe();
     const player = [cards[0], cards[2]];
     const dealer = [cards[1], cards[3]];
     if (handInfo(player).blackjack || handInfo(dealer).blackjack) continue;
     if (options.focusedHands && !isFocusedTrainingHand(player)) continue;
-    return { player, dealer };
+    return {
+      stage:"player",
+      dealer,
+      hands:[newPracticeHand(player)],
+      activeIndex:0,
+      drawPile:cards.slice(4),
+      drawPosition:0,
+      busy:false,
+      scored:false,
+      message:"Choose an action."
+    };
   }
+}
+
+function drawPracticeCard(round) {
+  const card = round.drawPile[round.drawPosition];
+  round.drawPosition += 1;
+  if (card === undefined) throw new Error("The practice shoe ran out of cards.");
+  return card;
 }
 
 function availableInitialActions(cards) {
@@ -297,42 +328,308 @@ function switchMode(mode) {
   if (mode === "play") renderPlay();
 }
 
+function activePracticeHand(round) {
+  return round?.hands[round.activeIndex] || null;
+}
+
+function availablePracticeActions(round) {
+  const hand = activePracticeHand(round);
+  if (!round || round.stage !== "player" || round.busy || !hand || hand.status !== "active") return [];
+  const actions = ["hit", "stand"];
+  if (hand.cards.length === 2 && !hand.splitAces) actions.push("double");
+  if (
+    hand.cards.length === 2 &&
+    sameRankPair(hand.cards) &&
+    round.hands.length < 4 &&
+    !(hand.fromSplit && rankOf(hand.cards[0]) === 12)
+  ) actions.push("split");
+  return actions;
+}
+
+function renderPracticeDealer(container, totalElement, round) {
+  container.replaceChildren();
+  const revealHole = ["dealer", "complete"].includes(round.stage);
+  round.dealer.forEach((card, index) => {
+    container.append(cardElement(card, { back:index === 1 && !revealHole }));
+  });
+  if (totalElement) {
+    if (revealHole) {
+      const info = handInfo(round.dealer);
+      totalElement.textContent = info.bust ? `Bust (${info.total})` : `${info.soft ? "Soft " : ""}${info.total}`;
+    } else {
+      totalElement.textContent = "";
+    }
+  }
+}
+
+function renderPracticeHands(container, round) {
+  container.replaceChildren();
+  round.hands.forEach((hand, index) => {
+    const box = document.createElement("div");
+    box.className = `practice-hand-box${round.stage === "player" && index === round.activeIndex ? " active" : ""}`;
+
+    const label = document.createElement("div");
+    label.className = "zone-label";
+    label.textContent = round.hands.length > 1 ? `Hand ${index + 1}` : "You";
+
+    const cardRow = document.createElement("div");
+    cardRow.className = "hand";
+    hand.cards.forEach((card) => cardRow.append(cardElement(card)));
+
+    const info = handInfo(hand.cards);
+    const total = document.createElement("div");
+    total.className = "practice-total";
+    total.textContent = info.bust ? `Bust (${info.total})` : `${info.soft && !info.bust ? "Soft " : ""}${info.total}`;
+
+    const outcome = document.createElement("div");
+    outcome.className = "practice-hand-outcome";
+    outcome.textContent = hand.outcome;
+
+    box.append(label, cardRow, total, outcome);
+    container.append(box);
+  });
+}
+
+function renderPracticeActionArea(container, round, handler) {
+  const actions = availablePracticeActions(round);
+  renderActionButtons(container, actions, handler, { fixedSlots:true });
+  [...container.children].forEach((button) => {
+    button.disabled = round.busy || button.classList.contains("action-unavailable");
+  });
+}
+
 function newTrainHand() {
-  state.train.scenario = scenarioFromFreshShoe({ focusedHands: state.train.focusedHands });
-  state.train.answered = false;
-  elements.trainFeedback.textContent = "";
+  state.train.round = practiceRoundFromFreshShoe({ focusedHands:state.train.focusedHands });
+  elements.trainFeedback.textContent = "Choose an action.";
   elements.trainFeedback.className = "feedback";
   renderTrain();
 }
 
 function renderTrain() {
-  const { player, dealer } = state.train.scenario;
+  const round = state.train.round;
+  if (!round) return;
   elements.trainFocusedHands.checked = state.train.focusedHands;
-  renderHand(elements.trainDealer, [dealer[0]]);
-  elements.trainDealer.append(cardElement(dealer[1], { back:true }));
-  renderHand(elements.trainPlayer, player);
-  renderActionButtons(elements.trainActions, availableInitialActions(player), answerTrain, { fixedSlots:true });
-  [...elements.trainActions.children].forEach((button) => {
-    button.disabled = state.train.answered || button.classList.contains("action-unavailable");
-  });
-  elements.trainNext.disabled = !state.train.answered;
-  elements.trainScoreText.textContent = `${state.train.correct} / ${state.train.attempts}`;
+  renderPracticeDealer(elements.trainDealer, elements.trainDealerTotal, round);
+  renderPracticeHands(elements.trainHands, round);
+  renderPracticeActionArea(elements.trainActions, round, answerTrain);
+  elements.trainNext.disabled = round.stage !== "complete" || round.busy;
+  elements.trainScoreText.textContent = `${state.train.correct} / ${state.train.attempts} hands`;
   const percent = state.train.attempts ? 100 * state.train.correct / state.train.attempts : 0;
   elements.trainPercent.textContent = `${percent.toFixed(1)}%`;
 }
 
-function answerTrain(action) {
-  if (state.train.answered) return;
-  const correctAction = strategyAction(state.train.scenario.player, state.train.scenario.dealer[0]);
-  const correct = action === correctAction;
-  state.train.attempts += 1;
-  if (correct) state.train.correct += 1;
-  state.train.answered = true;
+async function answerTrain(action) {
+  await practiceAction("train", action);
+}
+
+function recordPracticeDecision(mode, action, hand, availableActions) {
+  const round = state[mode].round;
+  const canDouble = availableActions.includes("double");
+  const canSplit = availableActions.includes("split");
+  const correctAction = strategyAction(hand.cards, round.dealer[0], { canDouble, canSplit });
+  const wasCorrect = action === correctAction;
+
+  hand.decisionCount += 1;
+  hand.allDecisionsCorrect = hand.allDecisionsCorrect && wasCorrect;
+  if (!wasCorrect) {
+    hand.mistakes.push({
+      dealerUp:round.dealer[0],
+      player:[...hand.cards],
+      chosen:action,
+      correct:correctAction
+    });
+  }
+
+  if (mode === "train") {
+    elements.trainFeedback.textContent = wasCorrect
+      ? "Correct. Continue the hand."
+      : `Incorrect. Basic strategy says ${ACTION_LABELS[correctAction]}. Continue the hand.`;
+    elements.trainFeedback.className = `feedback ${wasCorrect ? "correct" : "incorrect"}`;
+  }
+  return wasCorrect;
+}
+
+function renderPracticeMode(mode) {
+  if (mode === "train") renderTrain();
+  else renderChallenge();
+}
+
+async function practiceAction(mode, action) {
+  const owner = state[mode];
+  const round = owner.round;
+  const hand = activePracticeHand(round);
+  const availableActions = availablePracticeActions(round);
+  if (!round || round.stage !== "player" || round.busy || !hand || !availableActions.includes(action)) return;
+
+  recordPracticeDecision(mode, action, hand, availableActions);
+  round.busy = true;
+
+  if (action === "hit") {
+    hand.cards.push(drawPracticeCard(round));
+    renderPracticeMode(mode);
+    await sleep(150);
+    const info = handInfo(hand.cards);
+    if (info.bust) {
+      hand.status = "bust";
+      hand.outcome = "Bust";
+    } else if (info.total === 21) {
+      hand.status = "done";
+    }
+  }
+
+  if (action === "stand") hand.status = "done";
+
+  if (action === "double") {
+    hand.cards.push(drawPracticeCard(round));
+    renderPracticeMode(mode);
+    await sleep(160);
+    const info = handInfo(hand.cards);
+    hand.status = info.bust ? "bust" : "done";
+    if (info.bust) hand.outcome = "Bust";
+  }
+
+  if (action === "split") {
+    const index = round.activeIndex;
+    const aceSplit = rankOf(hand.cards[0]) === 12;
+    const inherited = {
+      fromSplit:true,
+      splitAces:aceSplit,
+      allDecisionsCorrect:hand.allDecisionsCorrect,
+      decisionCount:hand.decisionCount,
+      mistakes:hand.mistakes
+    };
+    const first = newPracticeHand([hand.cards[0]], inherited);
+    const second = newPracticeHand([hand.cards[1]], inherited);
+    round.hands.splice(index, 1, first, second);
+
+    first.cards.push(drawPracticeCard(round));
+    renderPracticeMode(mode);
+    await sleep(145);
+    second.cards.push(drawPracticeCard(round));
+    renderPracticeMode(mode);
+    await sleep(145);
+
+    if (aceSplit || handInfo(first.cards).total === 21) first.status = "done";
+    if (aceSplit || handInfo(second.cards).total === 21) second.status = "done";
+  }
+
+  round.busy = false;
+  await advancePracticeRound(mode);
+}
+
+async function advancePracticeRound(mode) {
+  const round = state[mode].round;
+  if (!round || round.stage !== "player") return;
+
+  const current = activePracticeHand(round);
+  if (current && current.status === "active") {
+    renderPracticeMode(mode);
+    return;
+  }
+
+  const next = round.hands.findIndex((hand, index) => index > round.activeIndex && hand.status === "active");
+  if (next >= 0) {
+    round.activeIndex = next;
+    if (mode === "train") {
+      elements.trainFeedback.textContent = `Continue with hand ${next + 1} of ${round.hands.length}.`;
+      elements.trainFeedback.className = "feedback";
+    }
+    renderPracticeMode(mode);
+    return;
+  }
+
+  await practiceDealerTurn(mode);
+}
+
+async function practiceDealerTurn(mode) {
+  const round = state[mode].round;
+  round.stage = "dealer";
+  round.busy = true;
+  renderPracticeMode(mode);
+  await sleep(220);
+
+  if (!round.hands.every((hand) => hand.status === "bust")) {
+    while (true) {
+      const info = handInfo(round.dealer);
+      if (info.total < 17 || (info.total === 17 && info.soft)) {
+        round.dealer.push(drawPracticeCard(round));
+        renderPracticeMode(mode);
+        await sleep(180);
+      } else {
+        break;
+      }
+    }
+  }
+
+  await settlePracticeRound(mode);
+}
+
+function settlePracticeOutcomes(round) {
+  const dealer = handInfo(round.dealer);
+  round.hands.forEach((hand) => {
+    const player = handInfo(hand.cards);
+    if (player.bust) hand.outcome = "Lose";
+    else if (dealer.bust || player.total > dealer.total) hand.outcome = "Win";
+    else if (player.total === dealer.total) hand.outcome = "Push";
+    else hand.outcome = "Lose";
+    hand.status = "done";
+  });
+  round.stage = "complete";
+  round.busy = false;
+}
+
+function scoreTrainRound(round) {
+  if (round.scored) return;
+  const totalHands = round.hands.length;
+  const perfectHands = round.hands.filter((hand) => hand.allDecisionsCorrect).length;
+  state.train.attempts += totalHands;
+  state.train.correct += perfectHands;
+  round.scored = true;
   localStorage.setItem("blackjackTrainAttempts", String(state.train.attempts));
   localStorage.setItem("blackjackTrainCorrect", String(state.train.correct));
-  elements.trainFeedback.textContent = correct ? "Correct!" : `Incorrect. Basic strategy says ${ACTION_LABELS[correctAction]}.`;
-  elements.trainFeedback.className = `feedback ${correct ? "correct" : "incorrect"}`;
-  renderTrain();
+  elements.trainFeedback.textContent = `Round complete: ${perfectHands} of ${totalHands} ${totalHands === 1 ? "hand" : "hands"} played perfectly.`;
+  elements.trainFeedback.className = `feedback ${perfectHands === totalHands ? "correct" : "incorrect"}`;
+}
+
+function scoreChallengeRound(round) {
+  if (round.scored) return;
+  const challenge = state.challenge;
+  for (const hand of round.hands) {
+    if (challenge.completedHands >= 200) break;
+    challenge.completedHands += 1;
+    if (hand.allDecisionsCorrect) {
+      challenge.correct += 1;
+    } else {
+      challenge.misses.push({
+        handNumber:challenge.completedHands,
+        dealerUp:round.dealer[0],
+        player:[...hand.cards],
+        mistakes:hand.mistakes.map((mistake) => ({ ...mistake, player:[...mistake.player] }))
+      });
+    }
+  }
+  round.scored = true;
+}
+
+async function settlePracticeRound(mode) {
+  const round = state[mode].round;
+  settlePracticeOutcomes(round);
+
+  if (mode === "train") {
+    scoreTrainRound(round);
+    renderTrain();
+    return;
+  }
+
+  scoreChallengeRound(round);
+  renderChallenge();
+  await sleep(260);
+  if (state.challenge.completedHands >= 200) {
+    state.challenge.finished = true;
+    renderChallengeSummary();
+  } else {
+    newChallengeRound();
+  }
 }
 
 function lookupPlaceholder() {
@@ -954,10 +1251,8 @@ async function splitActiveHand() {
   round.hands.splice(index, 1, first, second);
   first.cards.push(drawCard()); renderPlay(); await sleep(160);
   second.cards.push(drawCard()); renderPlay(); await sleep(160);
-  if (aceSplit) {
-    first.status = "done";
-    second.status = "done";
-  }
+  if (aceSplit || handInfo(first.cards).total === 21) first.status = "done";
+  if (aceSplit || handInfo(second.cards).total === 21) second.status = "done";
 }
 
 async function advancePlay() {
@@ -1337,7 +1632,7 @@ function renderPlay() {
 }
 
 function startChallenge() {
-  state.challenge = { active:true, number:1, correct:0, scenario:scenarioFromFreshShoe(), finished:false, misses:[] };
+  state.challenge = { active:true, completedHands:0, correct:0, round:null, finished:false, misses:[] };
   elements.modeTabs.classList.add("hidden");
   elements.challengeLaunch.classList.add("hidden");
   elements.trainPanel.classList.add("hidden");
@@ -1348,41 +1643,32 @@ function startChallenge() {
   elements.challengeGame.classList.remove("hidden");
   elements.challengeSummary.classList.add("hidden");
   elements.challengeReview.classList.add("hidden");
+  newChallengeRound();
+}
+
+function newChallengeRound() {
+  if (!state.challenge.active || state.challenge.finished) return;
+  state.challenge.round = practiceRoundFromFreshShoe();
   renderChallenge();
 }
 
 function renderChallenge() {
-  const c = state.challenge;
-  elements.challengeProgress.textContent = `Hand ${c.number} of 200`;
-  renderHand(elements.challengeDealer, [c.scenario.dealer[0]]);
-  elements.challengeDealer.append(cardElement(c.scenario.dealer[1], { back:true }));
-  renderHand(elements.challengePlayer, c.scenario.player);
-  renderActionButtons(elements.challengeActions, availableInitialActions(c.scenario.player), answerChallenge, { fixedSlots:true });
+  const challenge = state.challenge;
+  const round = challenge.round;
+  if (!round) return;
+
+  const activeNumber = round.stage === "player" && round.hands.length > 1
+    ? ` · Playing split hand ${round.activeIndex + 1} of ${round.hands.length}`
+    : "";
+  elements.challengeProgress.textContent = `Hands completed: ${challenge.completedHands} / 200${activeNumber}`;
+  renderPracticeDealer(elements.challengeDealer, elements.challengeDealerTotal, round);
+  renderPracticeHands(elements.challengeHands, round);
+  renderPracticeActionArea(elements.challengeActions, round, answerChallenge);
 }
 
-function answerChallenge(action) {
-  const c = state.challenge;
-  if (!c.active || c.finished) return;
-  const correctAction = strategyAction(c.scenario.player, c.scenario.dealer[0]);
-  if (action === correctAction) {
-    c.correct += 1;
-  } else {
-    c.misses.push({
-      handNumber: c.number,
-      dealerUp: c.scenario.dealer[0],
-      player: [...c.scenario.player],
-      chosen: action,
-      correct: correctAction
-    });
-  }
-  if (c.number >= 200) {
-    c.finished = true;
-    renderChallengeSummary();
-  } else {
-    c.number += 1;
-    c.scenario = scenarioFromFreshShoe();
-    renderChallenge();
-  }
+async function answerChallenge(action) {
+  if (!state.challenge.active || state.challenge.finished) return;
+  await practiceAction("challenge", action);
 }
 
 function renderChallengeSummary() {
@@ -1397,15 +1683,17 @@ function renderChallengeSummary() {
   let resultMarkup;
   if (perfect) {
     resultMarkup = `
-      <div class="certificate grand-master-certificate">
-        <div class="grand-master-suits" aria-hidden="true">♠ · ♦ · ♣ · ♥</div>
+      <div class="certificate grand-master">
+        <div class="grand-master-rays" aria-hidden="true"></div>
+        <div class="grand-master-stars" aria-hidden="true">♠ · ♦ · ♣ · ♥</div>
         <div class="certificate-small">CASA DEL JEFE · HALL OF MASTERS</div>
-        <div class="grand-master-title">BLACKJACK<br>GRAND MASTER</div>
-        <div class="grand-master-rule"></div>
+        <div class="certificate-title">BLACKJACK<br>GRAND MASTER</div>
+        <div class="certificate-rule"></div>
         <p>This certifies a flawless performance in the 200-hand El Jefe Blackjack Challenge.</p>
-        <div class="grand-master-score">200 / 200 · 100%</div>
-        <div class="grand-master-seal"><span>100%</span><small>PERFECT</small></div>
-        <p class="grand-master-certified">Certified by El Jefe</p>
+        <div class="certificate-score">200 / 200 · 100%</div>
+        <div class="grand-master-crest" aria-hidden="true">♛</div>
+        <div class="grand-master-subtitle">Perfect Strategy</div>
+        <p>Certified by El Jefe</p>
         <p>${today}</p>
         <div class="certificate-share">Screenshot this Grand Master certificate and send it to the group text thread.</div>
       </div>`;
@@ -1469,7 +1757,7 @@ function renderChallengeReview() {
   const intro = document.createElement("p");
   intro.className = "challenge-review-intro";
   intro.textContent = c.misses.length
-    ? `${c.misses.length} decision${c.misses.length === 1 ? "" : "s"} to review.`
+    ? `${c.misses.length} hand${c.misses.length === 1 ? "" : "s"} contained at least one incorrect decision.`
     : "Perfect challenge. There were no missed hands.";
   elements.challengeReview.append(intro);
 
@@ -1509,10 +1797,22 @@ function renderChallengeReview() {
     table.append(dealer, player);
 
     const decisions = document.createElement("div");
-    decisions.className = "missed-decision-grid";
-    decisions.innerHTML = `
-      <div><span>Your decision</span><strong class="incorrect-decision">${ACTION_LABELS[miss.chosen]}</strong></div>
-      <div><span>Correct decision</span><strong class="correct-decision">${ACTION_LABELS[miss.correct]}</strong></div>`;
+    decisions.className = "missed-decision-list";
+    const mistakes = Array.isArray(miss.mistakes) ? miss.mistakes : [];
+    mistakes.forEach((mistake, index) => {
+      const row = document.createElement("div");
+      row.className = "missed-decision-entry";
+      const context = document.createElement("div");
+      context.className = "missed-decision-context";
+      context.textContent = `Decision ${index + 1} · ${blackjackHandDescription(mistake.player)}`;
+      const grid = document.createElement("div");
+      grid.className = "missed-decision-grid";
+      grid.innerHTML = `
+        <div><span>Your decision</span><strong class="incorrect-decision">${ACTION_LABELS[mistake.chosen]}</strong></div>
+        <div><span>Correct decision</span><strong class="correct-decision">${ACTION_LABELS[mistake.correct]}</strong></div>`;
+      row.append(context, grid);
+      decisions.append(row);
+    });
 
     item.append(number, table, decisions);
     list.append(item);

@@ -1,7 +1,7 @@
 {
   "name": "Casa del Jefe \u2014 Blackjack Salon",
   "short_name": "Blackjack Salon",
-  "description": "Blackjack strategy training, complete lookup tables, session mistake review, and the El Jefe Challenge.",
+  "description": "Full-hand blackjack strategy training, complete lookup tables, session mistake review, and the 200-hand El Jefe Challenge.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

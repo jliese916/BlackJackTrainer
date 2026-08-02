@@ -1249,3 +1249,275 @@ footer{color:var(--casa-muted)}
   .header-paytable-grid{grid-template-columns:1fr;gap:3px;padding-inline:4px}
   .game-details-grid strong{margin-bottom:7px}
 }
+
+/* Version 24: full-hand training, Pai Gow-style accuracy bubble, and shared Grand Master certificate */
+.mandalay-table{
+  padding-top:16px!important;
+}
+.mandalay-wordmark{
+  position:relative!important;
+  z-index:1!important;
+  display:grid!important;
+  gap:1px!important;
+  margin:0 auto 10px!important;
+  color:#f1d992!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  letter-spacing:.12em!important;
+  text-shadow:none!important;
+}
+.mandalay-wordmark span{
+  display:block!important;
+  font-size:1rem!important;
+  font-weight:900!important;
+  letter-spacing:.12em!important;
+}
+.mandalay-wordmark small{
+  display:block!important;
+  margin:0!important;
+  font-size:.64rem!important;
+  font-weight:400!important;
+  letter-spacing:.18em!important;
+}
+.table-accuracy-bubble{
+  position:relative;
+  z-index:5;
+  display:grid;
+  place-items:center;
+  width:max-content;
+  min-width:132px;
+  margin:-4px auto 9px;
+  padding:7px 16px 8px;
+  border:1px solid rgba(241,217,146,.62);
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(18,66,48,.98),rgba(5,35,25,.98));
+  color:#fff;
+  box-shadow:0 7px 16px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.08);
+  text-align:center;
+}
+.table-accuracy-bubble small{
+  display:block;
+  color:#cbbf9f;
+  font-size:.62rem;
+  font-weight:850;
+  letter-spacing:.1em;
+  line-height:1.1;
+  text-transform:uppercase;
+}
+.table-accuracy-bubble strong{
+  color:#fff;
+  font-size:1.08rem;
+  line-height:1.25;
+  text-align:center;
+}
+.table-accuracy-bubble .play-accuracy-line{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:100%;
+  min-height:1.4rem;
+}
+.table-accuracy-bubble .play-decision-indicator{
+  position:absolute;
+  left:calc(50% + 35px);
+  top:50%;
+  transform:translateY(-50%) scale(.8);
+}
+.table-accuracy-bubble .play-decision-indicator.pulse{
+  animation:play-decision-bubble-pulse .82s ease-out forwards;
+}
+@keyframes play-decision-bubble-pulse{
+  0%{opacity:0;transform:translateY(-50%) scale(.55)}
+  22%{opacity:1;transform:translateY(-50%) scale(1.38)}
+  43%{opacity:1;transform:translateY(-50%) scale(.9)}
+  62%{opacity:1;transform:translateY(-50%) scale(1.12)}
+  100%{opacity:.5;transform:translateY(-50%) scale(1)}
+}
+.play-topline.play-topline-two{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  width:min(360px,100%)!important;
+  margin-bottom:12px!important;
+}
+.play-topline.play-topline-two>div{
+  justify-items:center;
+}
+
+.train-practice-table,.challenge-practice-table{
+  position:relative;
+  overflow:hidden;
+  min-height:570px;
+  padding-top:15px!important;
+}
+.train-accuracy-bubble{
+  min-width:154px;
+  margin-bottom:13px;
+}
+.train-accuracy-bubble>span{
+  color:#cbbf9f;
+  font-size:.66rem;
+  font-weight:800;
+  line-height:1.15;
+}
+.practice-player-hands{
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  align-content:flex-start;
+  gap:9px;
+  min-height:154px;
+  margin:4px auto 2px;
+  flex-wrap:wrap;
+}
+.practice-hand-box{
+  display:grid;
+  justify-items:center;
+  min-width:142px;
+  max-width:100%;
+  padding:8px 7px 6px;
+  border:2px solid transparent;
+  border-radius:14px;
+  background:rgba(255,255,255,.08);
+}
+.practice-hand-box.active{
+  border-color:#f8df87;
+  background:rgba(255,255,255,.16);
+  box-shadow:0 0 0 2px rgba(248,223,135,.08);
+}
+.practice-hand-box .hand{
+  min-height:102px;
+}
+.practice-total{
+  min-height:1.25rem;
+  color:#f8fafc;
+  font-size:.76rem;
+  font-weight:850;
+  line-height:1.25rem;
+}
+.practice-hand-outcome{
+  min-height:1rem;
+  color:#fde68a;
+  font-size:.72rem;
+  font-weight:850;
+}
+.train-practice-table .dealer-zone,.challenge-practice-table .dealer-zone{
+  margin-bottom:8px;
+}
+.train-practice-table .feedback{
+  min-height:3rem;
+  margin:7px auto 2px!important;
+  color:#fff;
+}
+.train-practice-table .feedback.correct{color:#d5ffe3!important}
+.train-practice-table .feedback.incorrect{color:#ffd2d2!important}
+.train-score-controls{
+  display:flex;
+  justify-content:center;
+  margin:9px auto 0;
+}
+.train-score-controls .link-button{
+  grid-column:auto;
+  color:var(--casa-gold-soft);
+}
+.challenge-practice-table .challenge-actions-grid{
+  margin-top:8px!important;
+}
+
+.missed-decision-list{
+  display:grid;
+  gap:9px;
+  margin-top:11px;
+}
+.missed-decision-entry{
+  display:grid;
+  gap:6px;
+  padding-top:9px;
+  border-top:1px solid rgba(216,181,100,.2);
+}
+.missed-decision-entry:first-child{
+  padding-top:0;
+  border-top:0;
+}
+.missed-decision-context{
+  color:var(--casa-muted);
+  font-size:.72rem;
+  font-weight:850;
+  letter-spacing:.04em;
+}
+
+/* Match the Three Card Poker Grand Master certificate exactly. */
+.certificate.grand-master{
+  border:9px double #f3c969;
+  background:radial-gradient(circle at 50% 23%,rgba(86,68,150,.9),rgba(20,17,50,.98) 48%,#080713 100%);
+  color:#fff7d6;
+  box-shadow:inset 0 0 0 2px rgba(255,231,155,.5),inset 0 0 50px rgba(174,132,255,.22),0 15px 34px rgba(25,18,62,.36);
+}
+.grand-master .certificate-small{color:#d9c6ff}
+.grand-master .certificate-title{
+  position:relative;
+  margin-top:6px;
+  color:#fff1a8;
+  font-size:clamp(2.3rem,10vw,3.6rem);
+  text-shadow:0 2px 0 #7b5f12,0 0 18px rgba(255,229,132,.35);
+}
+.grand-master .certificate-rule{
+  position:relative;
+  height:3px;
+  background:linear-gradient(90deg,transparent,#f3c969,transparent);
+}
+.grand-master p{position:relative;color:#f1eafb}
+.grand-master .certificate-score{
+  position:relative;
+  border:1px solid #f3c969;
+  background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,214,93,.12));
+  color:#fff4bc;
+  box-shadow:0 0 18px rgba(243,201,105,.18);
+}
+.grand-master .certificate-share{
+  position:relative;
+  background:linear-gradient(90deg,#6f4dba,#b17a23,#6f4dba);
+  color:#fff;
+}
+.grand-master-stars{
+  position:relative;
+  color:#ffe99c;
+  font-size:.74rem;
+  font-weight:900;
+  letter-spacing:.14em;
+}
+.grand-master-crest{
+  position:relative;
+  margin:6px auto -3px;
+  color:#ffe99c;
+  font-size:2.2rem;
+  text-shadow:0 0 16px rgba(255,233,156,.6);
+}
+.grand-master-subtitle{
+  position:relative;
+  color:#e4d5ff;
+  font-size:1.05rem;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.grand-master-rays{
+  position:absolute;
+  inset:-55%;
+  background:repeating-conic-gradient(from 0deg,rgba(255,232,139,.07) 0 5deg,transparent 5deg 13deg);
+  animation:grandMasterGlow 18s linear infinite;
+  pointer-events:none;
+}
+@keyframes grandMasterGlow{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){
+  .grand-master-rays{animation:none}
+  .table-accuracy-bubble .play-decision-indicator.pulse{animation:none;opacity:.7;transform:translateY(-50%) scale(1)}
+}
+@media(max-width:480px){
+  .table-accuracy-bubble{min-width:124px;padding-inline:13px}
+  .train-accuracy-bubble{min-width:145px}
+  .practice-player-hands{gap:6px}
+  .practice-hand-box{min-width:122px;padding-inline:5px}
+  .train-practice-table,.challenge-practice-table{min-height:545px;padding-inline:6px!important}
+}
+@media(max-width:360px){
+  .practice-hand-box{min-width:112px}
+  .practice-hand-box .card{width:46px;height:70px}
+}
