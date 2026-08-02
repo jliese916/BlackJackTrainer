@@ -144,3 +144,11 @@ Then open `http://localhost:8000`.
 - Rebuilt the El Jefe Challenge as 200 completed hands with split hands counted separately; the 98% passing threshold remains 196 of 200.
 - Matched the perfect Blackjack Grand Master certificate to the Three Card Poker certificate design.
 - Service-worker cache: `el-jefe-blackjack-v24`.
+
+
+## Version 25 changes
+
+- Standardized the Play table statistics to the Pai Gow layout: **Balance / Accuracy / Bet** in one centered top panel.
+- Standardized the Train table statistics to **Hands / Accuracy** in one centered top panel.
+- Added the Training Room wordmark above the Train statistics for consistent table hierarchy.
+- Service-worker cache: `el-jefe-blackjack-v25`.

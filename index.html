@@ -25,7 +25,7 @@
 <link href="./manifest.webmanifest" rel="manifest"/>
 <link href="./favicon-64.png" rel="icon" type="image/png"/>
 <link href="./apple-touch-icon.png" rel="apple-touch-icon"/>
-<link href="./styles.css" rel="stylesheet"/>
+<link href="./styles.css?v=25" rel="stylesheet"/>
 </head>
 <body>
 <main class="app">
@@ -80,10 +80,13 @@
 <div class="train-playfield">
 <div class="train-table-main">
 <div class="practice-table train-practice-table" id="trainTable">
-<div aria-label="Training accuracy" class="table-accuracy-bubble train-accuracy-bubble">
-<small>Accuracy</small>
-<strong id="trainPercent">0.0%</strong>
-<span id="trainScoreText">0 / 0 hands</span>
+<div aria-label="Blackjack training room" class="mandalay-wordmark train-wordmark">
+<span>TRAINING ROOM</span>
+<small>PLAY EACH HAND PERFECTLY</small>
+</div>
+<div aria-label="Training statistics" class="train-score">
+<div><small>Hands</small><strong id="trainScoreText">0 / 0</strong></div>
+<div><small>Accuracy</small><strong id="trainPercent">0.0%</strong></div>
 </div>
 <div class="dealer-zone">
 <div class="zone-label">Dealer</div>
@@ -126,19 +129,13 @@
 </section>
 <section class="panel play-panel" id="playPanel">
 <div class="mandalay-table">
-<div aria-label="Play accuracy" class="table-accuracy-bubble play-accuracy-stat">
-<small>Accuracy</small>
-<span class="play-accuracy-line">
-<strong id="playAccuracy">0.0%</strong>
-<span aria-live="polite" class="play-decision-indicator" id="playDecisionIndicator"></span>
-</span>
-</div>
 <div aria-label="Casa del Jefe blackjack table" class="mandalay-wordmark">
 <span>CASA DEL JEFE</span>
 <small>BLACKJACK SALON</small>
 </div>
-<div aria-label="Play statistics" class="play-topline play-topline-two">
+<div aria-label="Play statistics" class="play-topline">
 <div><small>Balance</small><strong id="playBalance">0.0 units</strong></div>
+<div><small>Accuracy</small><span class="play-accuracy-line"><strong id="playAccuracy">0.0%</strong><span aria-live="polite" class="play-decision-indicator" id="playDecisionIndicator"></span></span></div>
 <div><small>Bet</small><strong>1 unit</strong></div>
 </div>
 <div class="table-layout">
@@ -220,6 +217,6 @@
 <a class="footer-link" href="https://jliese916.github.io/"><img alt="" aria-hidden="true" src="./jefe-crest.svg"/>Return to Casa del Jefe</a>
 </footer>
 </main>
-<script defer="" src="./app.js"></script>
+<script defer="" src="./app.js?v=25"></script>
 </body>
 </html>

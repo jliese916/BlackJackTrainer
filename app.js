@@ -413,7 +413,7 @@ function renderTrain() {
   renderPracticeHands(elements.trainHands, round);
   renderPracticeActionArea(elements.trainActions, round, answerTrain);
   elements.trainNext.disabled = round.stage !== "complete" || round.busy;
-  elements.trainScoreText.textContent = `${state.train.correct} / ${state.train.attempts} hands`;
+  elements.trainScoreText.textContent = `${state.train.correct} / ${state.train.attempts}`;
   const percent = state.train.attempts ? 100 * state.train.correct / state.train.attempts : 0;
   elements.trainPercent.textContent = `${percent.toFixed(1)}%`;
 }

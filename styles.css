@@ -1521,3 +1521,32 @@ footer{color:var(--casa-muted)}
   .practice-hand-box{min-width:112px}
   .practice-hand-box .card{width:46px;height:70px}
 }
+
+
+/* Version 25: Pai Gow-consistent table statistics */
+.play-topline,.train-score{
+  position:relative;
+  z-index:5;
+  display:grid;
+  gap:8px;
+  width:min(480px,100%);
+  margin:0 auto 8px;
+  padding:9px 10px;
+  border:1px solid rgba(216,181,100,.34);
+  border-radius:13px;
+  background:rgba(2,20,14,.42);
+  color:#fff;
+  text-align:center;
+}
+.play-topline{grid-template-columns:repeat(3,minmax(0,1fr))}
+.train-score{grid-template-columns:repeat(2,minmax(0,1fr));width:min(330px,100%);margin-bottom:13px}
+.play-topline>div,.train-score>div{display:grid;gap:2px;align-content:center;justify-items:center;min-width:0}
+.play-topline small,.train-score small{color:#cbbf9f;font-size:.65rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.play-topline strong,.train-score strong{color:#fff;font-size:.94rem;line-height:1.25;text-align:center}
+.play-accuracy-line{display:flex;align-items:center;justify-content:center;gap:5px;min-height:1.25rem}
+.train-wordmark{margin-bottom:8px!important}
+@media(max-width:390px){
+  .play-topline,.train-score{gap:3px;padding-inline:5px}
+  .play-topline small,.train-score small{font-size:.57rem}
+  .play-topline strong,.train-score strong{font-size:.81rem}
+}
