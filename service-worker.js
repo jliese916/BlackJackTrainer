@@ -1,17 +1,18 @@
 "use strict";
 
-const CACHE_NAME = "el-jefe-blackjack-v26";
+const CACHE_NAME = "el-jefe-jacks-trainer-v30";
 const APP_SHELL = [
   "./index.html",
-  "./styles.css?v=26",
-  "./app.js?v=26",
+  "./styles.css?v=30",
+  "./app.js?v=30",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
   "./apple-touch-icon.png",
-  "./og-blackjack.png",
+  "./og-jacks-or-better.png",
   "./favicon-64.png",
-  "./jefe-crest.svg"
+  "./jefe-crest.svg",
+  "./JacksOrBetterStrategy.json"
 ];
 
 self.addEventListener("install", event => {
@@ -39,6 +40,7 @@ function cacheResponse(request, response, cacheKey = request) {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+
   if (event.request.mode === "navigate") {
     event.respondWith(
       caches.match("./index.html").then(cached => {
@@ -50,6 +52,7 @@ self.addEventListener("fetch", event => {
     );
     return;
   }
+
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
