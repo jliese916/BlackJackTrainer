@@ -1,97 +1,139 @@
-# Casa del Jefe — Video Poker Hall v30
+# Casa del Jefe — Let It Ride Lounge v31
 
-This package is self-contained and includes `JacksOrBetterStrategy.json`.
+A self-contained browser trainer for the standard Let It Ride paytable:
+1000 / 200 / 50 / 11 / 8 / 5 / 3 / 2 / 1 for royal flush through pair of tens or better.
 
-## Main modes
+## Modes
 
-- **Play** — first tab; wager five units, choose holds, draw replacements, compare your bankroll with optimal play, and review every incorrect decision from the current session.
-- **Train** — practice optimal holds with immediate feedback and a persistent score.
-- **Look Up** — enter any five-card hand, view all tied optimal holds, and open the embedded **Complete Decision Ladder**.
-- **El Jefe Challenge** — complete 200 hands without feedback. Scores of 190/200 or better earn an El Jefe Approved certificate; a perfect 200/200 earns the special **Grand Master — Certified by El Jefe** certificate.
+- **Play**: three-unit bankroll simulation, full-hand accuracy, incorrect-decision review, and actual-vs-optimal bankroll chart.
+- **Train**: complete-hand practice with concise Correct/Incorrect feedback.
+- **Look Up**: three-card and four-card strategy lookup with plain-English explanations.
+- **El Jefe Challenge**: 200 complete hands; 196/200 passes and 200/200 earns Grand Master.
 
-## Version 30 changes
+Indifferent second-decision states accept either action as correct.
+
+## v15 update
+
+- Centered the three-chip group beneath the player cards.
+- The middle `2` spot is directly below the middle player card, with `$` and `1` equally spaced on either side.
+- Kept the tighter horizontal action-button layout.
+- Added a very brief 120 ms transition lock after Decision 1 so a fast double-click cannot accidentally submit Decision 2.
+
+
+## v16 update
+
+- Reworked the Train table so the cream arc passes between the community and player cards.
+- Lowered the player cards slightly to match the Play table geometry.
+- Compressed the betting and feedback area so the New Hand button sits closer to the action.
+
+Open `index.html` directly, or serve this directory from any static web host.
+
+
+### v14 layout fix
+The middle betting chip is aligned at runtime to the center of the middle player card, making the layout consistent across browsers, zoom levels, and responsive widths. Static assets use versioned URLs to prevent stale hosted CSS or JavaScript.
+
+
+### v15 button hit-area fix
+The active Pull Back and Let It Ride controls are raised above neighboring chip columns, so every visible point inside either button responds to clicks and taps.
+
+
+## v17 update
+
+- Tightened the three-chip rail at mobile widths while preserving exact center alignment beneath the middle player card.
+- Reduced the mobile action-button gap and width so the full Pull Back and Let It Ride controls remain inside the viewport, including on 320 px screens.
+
+## v18 update
+
+- Brought all three betting chips slightly closer to center.
+- Preserved exact alignment of the middle `2` chip beneath the middle player card.
+- Tightened mobile spacing further so the full decision controls remain on-screen.
+
+## v19 update
+
+- Widened the Pull Back and Let It Ride buttons after tightening the chip rail.
+- Preserved narrower responsive widths for small and very small phones.
+- Kept the middle chip anchored beneath the middle player card.
+
+
+## v20 update
+
+- Replaced the moving, per-chip action buttons with a fixed centered Blackjack-style button pair.
+- Added a moving upward arrow and “Choose decision 1/2” cue beneath the active removable chip.
+- Added red `P` and green `R` action symbols matching the strategy-guide language.
+- Kept the full button surfaces clickable and preserved the brief 120 ms transition lock.
+
+
+## v21 update
+
+- Corrected the physical wager order: Decision 1 now points to and removes the right-hand `1` chip.
+- Decision 2 then moves to and removes the middle `2` chip.
+- The left `$` chip remains mandatory throughout the hand.
+- Applied the corrected order consistently in Play, Train, and the El Jefe Challenge.
+
+
+## v22 update
+
+- Changed the decision cue text to white and centered it beneath the arrow.
+- Added a little more space between the arrow and the decision label.
+- Removed `(-3)` from the Deal and New Hand button labels.
+- Tightened the empty space between the decision controls and the Deal/New Hand button.
+- Added Enter-key support for dealing a hand in Play and starting a new hand in Train.
+- Made the masthead crest a link back to Casa del Jefe.
+
+
+## v23 update
+
+- Reserved a fixed-height result area in Play.
+- Final hand text no longer changes the table height, so the cards, chips, cream arc, and perspective lines stay perfectly still when the result appears.
+
+
+## v24 update
+
+- Renamed the suited first-decision category to “Certain three-card straight flush draws.”
+- Uses “qualifying three-card straight flush draw” consistently in lookup explanations.
+- Renamed the first second-decision category to “Guaranteed winners” and lists its made hands beneath it.
+- Standardized visible labels to “First Decision” and “Second Decision.”
+- Rebuilt the Lookup card layout so the plus sign is centered exactly between the adjacent cards on desktop and centered both horizontally and vertically on mobile.
+
+
+## v25 update
+
+- Shortened the lookup labels to **Player** and **Community**.
+- Enlarged and padded the lookup card container so its labels remain fully contained.
+- Raised the mobile plus sign slightly while keeping it horizontally centered.
+
+
+## v26 update
+
+Restored the Play accuracy feedback indicator. After each completed hand, a green `+` appears when both decisions were optimal and a red `−` appears when either decision was incorrect. The accuracy percentage remains hand-based and updates only after the hand is complete.
+
+
+## v27 update
+
+- Added an **Observational Plays** addendum at the bottom of Complete Optimal Strategy.
+- Documents first-decision deviations for T-J-Q, the other three-rank combinations from T/J/Q/K, and low pairs when complete opposing hands reveal no matching ranks.
+- Clarifies that the main guide assumes only the player's cards and community cards are known.
+
+
+## v29 update
+
+- Reserved a stable vertical-scrollbar gutter so Play, Train, and Look Up remain on the exact same horizontal centerline when switching modes.
+- Advanced cache-busting asset URLs and the service-worker cache to v29.
+
+
+## v30 update
+
+- Standardized Play statistics as Balance / Accuracy / Bet.
+- Moved Train statistics to the top of the felt as Hands / Accuracy.
+- Added the shared Training Room wordmark and retained the Casa del Jefe Hall of Masters Grand Master certificate.
+- Advanced cache-busting asset URLs and the service-worker cache to v30.
+
+
+## v31 update
 
 - Allows vertical page scrolling when a touch gesture begins over the bankroll chart.
-- Consolidates chart redraws into a single animation frame and skips redundant canvas work.
-- Registers the service worker after the page becomes idle so startup remains responsive.
-- Installs updates quietly and shows a footer notice instead of interrupting an active hand.
-- Adds a user-controlled **Reload Now** button when a newer version is ready.
-- Service-worker cache: `el-jefe-jacks-trainer-v30`.
-
-## Version 21 changes
-
-- Removed the crest watermark from the El Jefe Challenge button and mounted the crest at the center of the castle masthead.
-- Restyled bankroll history and incorrect-hand review in the dark Casa del Jefe palette.
-- Rebuilt ladder examples with the same centered rank and corner-suit card design used in Play.
-- Removed the beige example capsules in favor of subtle dark holders.
-- Standardized rung colors by hand family: royal, ordinary draw, 3SF, high-card/Broadway, special case, and none.
-- Added the crest to the Return to Casa del Jefe link.
-
-- Removed the “Video Poker Practice” eyebrow above the title.
-- Clarified that the two made-hand groups are handled before the main ladder, using top/bottom wording that matches the stacked layout.
-- Removed the internal coverage note from the bottom of the decision ladder.
-- Removed the footer paytable shortcut and strategy-profile sentence; the full-pay 9/6 max-bet context remains in the header.
-- Refined and recentered the Casa del Jefe crest.
-- Added iPhone icon and rich sharing previews with the crest.
-- Preserved simple rank-and-suit card faces.
-- Renamed the never-break made-hand group “UNBREAKABLE”; high pairs remain in the separate breakable group.
-- Kept the colored numbered ladder exclusively for non-made hands.
-- Defined non-royal three-card straight-flush draws as “3SF” at first mention.
-- Matched all example suit colors and switch badges to their actual ladder rungs.
-- Service-worker cache: `el-jefe-jacks-trainer-v21`.
-
-## Run locally
-
-Open a terminal in this folder and run:
-
-`py -m http.server 8000`
-
-Then open `http://localhost:8000`.
-
-## Deploy to GitHub Pages
-
-Replace the existing site files with the contents of this folder and commit them to the branch used by GitHub Pages. The included strategy JSON must be deployed beside `index.html`.
-
-
-## Version 23 changes
-
-- Combines session reset and incorrect-hand review into one full-width Session Review card.
-- Standardizes the Play-area support widths for a cleaner layout consistent with Blackjack.
-- Retains the Casa del Jefe crest card backs, decision ladder, and all Version 22 features.
-- Service-worker cache: `el-jefe-jacks-trainer-v23`.
-
-## Version 25 changes
-
-- Shows the Casa del Jefe crest card backs before the first Play deal instead of gray placeholders.
-- Uses dark emerald empty-card slots in Look Up, matching the visual treatment used by Blackjack.
-- Service-worker cache: `el-jefe-jacks-trainer-v25`.
-
-
-## Version 26 changes
-
-- Changes the castle masthead title to **Video Poker Hall**.
-- Restyles Lookup rank and suit entry buttons in the dark emerald-and-gold Casa palette.
-- Places **Import from Play** before the manual result action, then keeps **Find Best Hold** as the final step below.
-- Retains the darker empty Lookup card slots and branded initial Play card backs.
-- Service-worker cache: `el-jefe-jacks-trainer-v26`.
-
-
-## Version 27
-- Restyled the Look Up optimal-hold result area to the Casa del Jefe dark emerald and gold theme.
-- Removed the oversized light result bubble while preserving light card faces for readability.
-
-## Version 28
-- Prevents horizontal recentering when switching among Play, Train, and Look Up by reserving the browser scrollbar gutter.
-- Removes the redundant wager amount from the Play deal-button labels.
-- Links the masthead crest to the Casa del Jefe home page.
-- Service-worker cache: `el-jefe-jacks-trainer-v28`.
-
-
-
-## Version 29
-
-- Standardized Play statistics as Balance / Accuracy / Bet in the Pai Gow-style top panel.
-- Standardized Train statistics as Hands / Accuracy in the same top-panel system.
-- Converted the Jacks or Better Play and Train rooms to the deeper green Pai Gow felt treatment.
-- Updated the perfect Grand Master certificate to the shared Casa del Jefe Hall of Masters design.
-- Service-worker cache: `el-jefe-jacks-trainer-v29`.
+- Uses a single scheduled chart redraw and skips redundant canvas reallocations.
+- Registers the service worker after the page is loaded and idle.
+- Lets a ready update wait without interrupting an active hand.
+- Adds a footer notice with **Reload Now** when a newer version is ready.
+- Uses cache-first repeat loading while quietly refreshing the cached app shell.

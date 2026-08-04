@@ -1,1474 +1,1024 @@
 "use strict";
 
-const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-const SUITS = ["\u2665", "\u2666", "\u2663", "\u2660"];
-const WAGER = 5;
-const CHALLENGE_HANDS = 200;
-const CHALLENGE_PASSING_SCORE = 190;
-
-const PAYTABLE = {
-  "Royal Flush": 4000,
-  "Straight Flush": 250,
-  "Four of a Kind": 125,
-  "Full House": 45,
-  "Flush": 30,
-  "Straight": 20,
-  "Three of a Kind": 15,
-  "Two Pair": 10,
-  "Jacks or Better": 5
-};
-
-const el = {
-  status: document.querySelector("#status"),
-  paytableDetails: document.querySelector("#paytableDetails"),
-  trainTab: document.querySelector("#trainTab"),
-  lookupTab: document.querySelector("#lookupTab"),
-  playTab: document.querySelector("#playTab"),
-  modeTabs: document.querySelector("#modeTabs"),
-  challengeLaunchWrap: document.querySelector("#challengeLaunchWrap"),
-  challengeLaunch: document.querySelector("#challengeLaunch"),
-  trainPanel: document.querySelector("#trainPanel"),
-  lookupPanel: document.querySelector("#lookupPanel"),
-  playPanel: document.querySelector("#playPanel"),
-  challengePanel: document.querySelector("#challengePanel"),
-  challengeActive: document.querySelector("#challengeActive"),
-  challengeSummary: document.querySelector("#challengeSummary"),
-  challengeReview: document.querySelector("#challengeReview"),
-  challengeProgress: document.querySelector("#challengeProgress"),
-  challengeMadeHand: document.querySelector("#challengeMadeHand"),
-  challengeHand: document.querySelector("#challengeHand"),
-  challengeSelection: document.querySelector("#challengeSelection"),
-  challengeSubmit: document.querySelector("#challengeSubmit"),
-  exitChallenge: document.querySelector("#exitChallenge"),
-  scorePanel: document.querySelector("#scorePanel"),
-  trainMadeHand: document.querySelector("#trainMadeHand"),
-  hand: document.querySelector("#hand"),
-  selection: document.querySelector("#selection"),
-  check: document.querySelector("#check"),
-  newHand: document.querySelector("#newHand"),
-  feedback: document.querySelector("#feedback"),
-  score: document.querySelector("#score"),
-  percentage: document.querySelector("#percentage"),
-  reset: document.querySelector("#reset"),
-  lookupHand: document.querySelector("#lookupHand"),
-  lookupPrompt: document.querySelector("#lookupPrompt"),
-  rankPicker: document.querySelector("#rankPicker"),
-  suitPicker: document.querySelector("#suitPicker"),
-  findHold: document.querySelector("#findHold"),
-  clearLookup: document.querySelector("#clearLookup"),
-  importFromPlay: document.querySelector("#importFromPlay"),
-  lookupFeedback: document.querySelector("#lookupFeedback"),
-  playBalance: document.querySelector("#playBalance"),
-  playAccuracy: document.querySelector("#playAccuracy"),
-  playDecisionIndicator: document.querySelector("#playDecisionIndicator"),
-  playBalanceChart: document.querySelector("#playBalanceChart"),
-  playChartSummary: document.querySelector("#playChartSummary"),
-  playDeltaSummary: document.querySelector("#playDeltaSummary"),
-  playMadeHand: document.querySelector("#playMadeHand"),
-  playHand: document.querySelector("#playHand"),
-  playSelection: document.querySelector("#playSelection"),
-  playAction: document.querySelector("#playAction"),
-  resetBalance: document.querySelector("#resetBalance"),
-  playMissedDetails: document.querySelector("#playMissedDetails"),
-  playMissedCount: document.querySelector("#playMissedCount"),
-  playMissedList: document.querySelector("#playMissedList"),
-  playFeedback: document.querySelector("#playFeedback"),
-  updateNotice: document.querySelector("#updateNotice"),
-  reloadUpdate: document.querySelector("#reloadUpdate")
-};
-
-let balanceChartFrame = 0;
-let lastBalanceChartSignature = "";
-
-const state = {
-  strategy: null,
-  mode: "play",
-
-  hand: [],
-  selected: new Set(),
-  answered: false,
-  attempts: Number(localStorage.getItem("jacksAttempts") || 0),
-  correct: Number(localStorage.getItem("jacksCorrect") || 0),
-
-  lookupHand: [],
-  pendingRank: null,
-  lookupResults: [],
-
-  playBalance: Number(localStorage.getItem("jacksPlayBalance") || 0),
-  playAttempts: Number(localStorage.getItem("jacksPlayAttempts") || 0),
-  playCorrect: Number(localStorage.getItem("jacksPlayCorrect") || 0),
-  playBalanceHistory: (() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("jacksPlayBalanceHistory") || "null");
-      if (Array.isArray(saved) && saved.length && saved.every(Number.isFinite)) return saved;
-    } catch (error) {
-      console.warn("Could not read saved Play balance history.", error);
-    }
-    const balance = Number(localStorage.getItem("jacksPlayBalance") || 0);
-    return balance === 0 ? [0] : [0, balance];
-  })(),
-  playOptimalBalance: (() => {
-    const saved = localStorage.getItem("jacksPlayOptimalBalance");
-    return saved === null
-      ? Number(localStorage.getItem("jacksPlayBalance") || 0)
-      : Number(saved);
-  })(),
-  playOptimalBalanceHistory: (() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("jacksPlayOptimalBalanceHistory") || "null");
-      if (Array.isArray(saved) && saved.length && saved.every(Number.isFinite)) return saved;
-    } catch (error) {
-      console.warn("Could not read saved optimal-play history.", error);
-    }
-
-    // When upgrading an existing session, begin the shadow line at the current actual history.
-    try {
-      const actual = JSON.parse(localStorage.getItem("jacksPlayBalanceHistory") || "null");
-      if (Array.isArray(actual) && actual.length && actual.every(Number.isFinite)) return [...actual];
-    } catch (error) {
-      console.warn("Could not migrate the prior Play history.", error);
-    }
-
-    const balance = Number(localStorage.getItem("jacksPlayBalance") || 0);
-    return balance === 0 ? [0] : [0, balance];
-  })(),
-  playPhase: "idle",
-  playHand: [],
-  playDeck: [],
-  playHeld: new Set(),
-  playHiddenPositions: new Set(),
-  playMisses: (() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("jacksPlayMisses") || "[]");
-      if (Array.isArray(saved)) return saved;
-    } catch (error) {
-      console.warn("Could not read saved Play missed hands.", error);
-    }
-    return [];
-  })(),
-
-  challengePreviousMode: "play",
-  challengeHand: [],
-  challengeSelected: new Set(),
-  challengeCompleted: 0,
-  challengeCorrect: 0,
-  challengeFinished: false,
-  challengeMisses: []
-};
-
-const rank = card => (card - 1) % 13;
-const suit = card => Math.floor((card - 1) / 13);
-const label = card => RANKS[rank(card)] + SUITS[suit(card)];
-const suitClass = card => ["hearts", "diamonds", "clubs", "spades"][suit(card)];
-
-function deck() {
-  const cards = Array.from({ length: 52 }, (_, index) => index + 1);
-  for (let i = cards.length - 1; i > 0; i -= 1) {
-    const random = new Uint32Array(1);
-    crypto.getRandomValues(random);
-    const j = random[0] % (i + 1);
-    [cards[i], cards[j]] = [cards[j], cards[i]];
-  }
-  return cards;
-}
-
-function evaluateHand(hand) {
-  if (hand.length !== 5) return { name: "", payout: 0 };
-
-  const ranks = hand.map(rank).sort((a, b) => a - b);
-  const suits = hand.map(suit);
-  const rankCounts = new Map();
-
-  for (const r of ranks) {
-    rankCounts.set(r, (rankCounts.get(r) || 0) + 1);
-  }
-
-  const counts = [...rankCounts.values()].sort((a, b) => b - a);
-  const uniqueRanks = [...rankCounts.keys()].sort((a, b) => a - b);
-  const flush = suits.every(s => s === suits[0]);
-  const wheel = uniqueRanks.join(",") === "0,1,2,3,12";
-  const ordinaryStraight = uniqueRanks.length === 5 && uniqueRanks[4] - uniqueRanks[0] === 4;
-  const straight = wheel || ordinaryStraight;
-  const royal = flush && uniqueRanks.join(",") === "8,9,10,11,12";
-
-  let name = "";
-
-  if (royal) name = "Royal Flush";
-  else if (straight && flush) name = "Straight Flush";
-  else if (counts[0] === 4) name = "Four of a Kind";
-  else if (counts[0] === 3 && counts[1] === 2) name = "Full House";
-  else if (flush) name = "Flush";
-  else if (straight) name = "Straight";
-  else if (counts[0] === 3) name = "Three of a Kind";
-  else if (counts[0] === 2 && counts[1] === 2) name = "Two Pair";
-  else if (counts[0] === 2) {
-    const pairRank = [...rankCounts.entries()].find(([, count]) => count === 2)?.[0];
-    name = pairRank >= 9 ? "Jacks or Better" : "Small Pair";
-  }
-
-  return { name, payout: PAYTABLE[name] || 0 };
-}
-
-function setMadeHand(element, hand) {
-  const result = evaluateHand(hand);
-  element.textContent = result.name;
-  element.classList.toggle("visible", Boolean(result.name));
-  element.classList.toggle("small-pair", result.name === "Small Pair");
-}
-
-function deal() {
-  state.hand = deck().slice(0, 5).sort((a, b) => a - b);
-  state.selected.clear();
-  state.answered = false;
-  feedback("", "");
-  renderTraining();
-}
-
-function toggle(card) {
-  if (state.answered) return;
-  state.selected.has(card) ? state.selected.delete(card) : state.selected.add(card);
-  renderTraining();
-}
-
-function cardButton(card, { selected = false, disabled = false, onClick = null, placeholder = false, cardBack = false } = {}) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "card" +
-    (placeholder ? " placeholder" : "") +
-    (cardBack ? " card-back" : "") +
-    (!placeholder && !cardBack ? ` suit-${suitClass(card)}` : "") +
-    (selected ? " selected" : "");
-  button.disabled = disabled || placeholder || cardBack;
-
-  if (placeholder) {
-    button.textContent = "+";
-  } else if (cardBack) {
-    button.setAttribute("aria-label", "Drawing card");
-  } else {
-    const topSuit = document.createElement("span");
-    topSuit.className = "card-suit card-suit-top";
-    topSuit.textContent = SUITS[suit(card)];
-
-    const rankText = document.createElement("span");
-    rankText.className = "card-rank";
-    rankText.textContent = RANKS[rank(card)];
-
-    const bottomSuit = document.createElement("span");
-    bottomSuit.className = "card-suit card-suit-bottom";
-    bottomSuit.textContent = SUITS[suit(card)];
-
-    button.append(topSuit, rankText, bottomSuit);
-    button.setAttribute("aria-label", label(card));
-    button.setAttribute("aria-pressed", String(selected));
-    if (onClick) button.onclick = onClick;
-  }
-
-  return button;
-}
-
-function renderTraining() {
-  el.hand.replaceChildren();
-  for (const card of state.hand) {
-    el.hand.append(cardButton(card, {
-      selected: state.selected.has(card),
-      disabled: state.answered,
-      onClick: () => toggle(card)
-    }));
-  }
-
-  setMadeHand(el.trainMadeHand, state.hand);
-
-  const kept = state.hand.filter(card => state.selected.has(card));
-  el.selection.textContent = kept.length ? "Keep: " + kept.map(label).join(" ") : "Discard all five cards";
-
-  const percentage = state.attempts ? 100 * state.correct / state.attempts : 0;
-  el.score.textContent = `${state.correct} / ${state.attempts}`;
-  el.percentage.textContent = percentage.toFixed(1) + "%";
-  el.check.disabled = !state.strategy || state.answered;
-}
-
-function saveTrainingScore() {
-  localStorage.setItem("jacksAttempts", state.attempts);
-  localStorage.setItem("jacksCorrect", state.correct);
-}
-
-function savePlaySession() {
-  localStorage.setItem("jacksPlayBalance", state.playBalance);
-  localStorage.setItem("jacksPlayAttempts", state.playAttempts);
-  localStorage.setItem("jacksPlayCorrect", state.playCorrect);
-  localStorage.setItem("jacksPlayBalanceHistory", JSON.stringify(state.playBalanceHistory));
-  localStorage.setItem("jacksPlayOptimalBalance", state.playOptimalBalance);
-  localStorage.setItem("jacksPlayOptimalBalanceHistory", JSON.stringify(state.playOptimalBalanceHistory));
-  localStorage.setItem("jacksPlayMisses", JSON.stringify(state.playMisses));
-}
-
-function status(message, type = "") {
-  el.status.textContent = message;
-  el.status.className = "status" + (type ? " " + type : "") + (message ? "" : " hidden");
-}
-
-function feedback(message, type) {
-  el.feedback.textContent = message;
-  el.feedback.className = "feedback" + (type ? " " + type : "");
-}
-
-function playFeedback(message, type = "") {
-  el.playFeedback.textContent = message;
-  el.playFeedback.className = "feedback" + (type ? " " + type : "");
-}
-
-function clearPlayDecisionIndicator() {
-  el.playDecisionIndicator.textContent = "";
-  el.playDecisionIndicator.className = "play-decision-indicator";
-  el.playDecisionIndicator.setAttribute("aria-label", "");
-}
-
-function flashPlayDecisionIndicator(wasCorrect) {
-  const symbol = wasCorrect ? "+" : "−";
-  const resultClass = wasCorrect ? "correct" : "incorrect";
-  const spokenText = wasCorrect ? "Optimal hold" : "Non-optimal hold";
-
-  el.playDecisionIndicator.textContent = symbol;
-  el.playDecisionIndicator.setAttribute("aria-label", spokenText);
-
-  // Remove the animation classes first so repeated identical results pulse again.
-  el.playDecisionIndicator.className = "play-decision-indicator";
-  void el.playDecisionIndicator.offsetWidth;
-  el.playDecisionIndicator.classList.add("visible", resultClass, "pulse");
-}
-
-function canonicalize(hand) {
-  const rows = Array.from({ length: 4 }, () => Array(13).fill(0));
-  for (const card of hand) rows[suit(card)][rank(card)] = 1;
-
-  const ordered = rows
-    .map((row, originalSuit) => ({ row, originalSuit }))
-    .sort((left, right) => {
-      for (let r = 0; r < 13; r += 1) {
-        if (left.row[r] !== right.row[r]) return left.row[r] - right.row[r];
-      }
-      return left.originalSuit - right.originalSuit;
-    });
-
-  const canonical = [];
-  const original = [];
-
-  ordered.forEach(({ row, originalSuit }, canonicalSuit) => {
-    row.forEach((present, r) => {
-      if (present) {
-        canonical.push(r + 1 + 13 * canonicalSuit);
-        original.push(r + 1 + 13 * originalSuit);
-      }
-    });
-  });
-
-  let key = 0;
-  for (const card of canonical) key = 53 * key + card;
-  return { key: String(key), original };
-}
-
-function fromMask(mask, cards) {
-  const set = new Set();
-  for (let i = 0; i < 5; i += 1) {
-    if (mask & (1 << (4 - i))) set.add(cards[i]);
-  }
-  return set;
-}
-
-function optimal(hand) {
-  const canonical = canonicalize(hand);
-  const masks = state.strategy[canonical.key];
-  if (!Array.isArray(masks)) throw new Error(`Missing key ${canonical.key} for ${hand}`);
-  return masks.map(mask => fromMask(Number(mask), canonical.original));
-}
-
-function equal(left, right) {
-  if (left.size !== right.size) return false;
-  for (const item of left) if (!right.has(item)) return false;
-  return true;
-}
-
-function describeForHand(set, hand) {
-  const cards = hand.filter(card => set.has(card));
-  return cards.length ? cards.map(label).join(" ") : "discard all five cards";
-}
-
-function check() {
-  try {
-    const holds = optimal(state.hand);
-    const correct = holds.some(hold => equal(hold, state.selected));
-    state.attempts += 1;
-    state.answered = true;
-
-    if (correct) {
-      state.correct += 1;
-      feedback("Correct!", "correct");
-    } else {
-      const descriptions = [...new Set(holds.map(hold => describeForHand(hold, state.hand)))];
-      feedback((descriptions.length === 1 ? "Optimal play: " : "Optimal plays: ") + descriptions.join(" or "), "incorrect");
-    }
-
-    saveTrainingScore();
-    renderTraining();
-  } catch (error) {
-    console.error(error);
-    feedback("Strategy lookup failed for this hand. See the browser console.", "error");
-  }
-}
-
-function setMode(mode) {
-  state.mode = mode;
-
-  const regularModes = ["train", "lookup", "play"];
-  const tabs = { train: el.trainTab, lookup: el.lookupTab, play: el.playTab };
-  const panels = { train: el.trainPanel, lookup: el.lookupPanel, play: el.playPanel };
-  const inChallenge = mode === "challenge";
-
-  for (const name of regularModes) {
-    const active = name === mode;
-    tabs[name].classList.toggle("active", active);
-    tabs[name].setAttribute("aria-selected", String(active));
-    panels[name].classList.toggle("hidden", !active);
-  }
-
-  el.challengePanel.classList.toggle("hidden", !inChallenge);
-  el.modeTabs.classList.toggle("hidden", inChallenge);
-  el.challengeLaunchWrap.classList.toggle("hidden", inChallenge);
-
-  if (mode === "lookup") renderLookup();
-  if (mode === "play") renderPlay();
-  if (mode === "challenge") renderChallenge();
-}
-
-
-function dealChallengeHand() {
-  state.challengeHand = deck().slice(0, 5).sort((a, b) => a - b);
-  state.challengeSelected.clear();
-}
-
-function startChallenge() {
-  if (!state.strategy) return;
-
-  state.challengePreviousMode = state.mode === "challenge" ? "train" : state.mode;
-  state.challengeCompleted = 0;
-  state.challengeCorrect = 0;
-  state.challengeFinished = false;
-  state.challengeMisses = [];
-  el.challengeReview.classList.add("hidden");
-  dealChallengeHand();
-  setMode("challenge");
-}
-
-function toggleChallengeCard(card) {
-  if (state.challengeFinished) return;
-  state.challengeSelected.has(card)
-    ? state.challengeSelected.delete(card)
-    : state.challengeSelected.add(card);
-  renderChallenge();
-}
-
-function submitChallengeHold() {
-  if (!state.strategy || state.challengeFinished) return;
-
-  try {
-    const holds = optimal(state.challengeHand);
-    const wasCorrect = holds.some(hold => equal(hold, state.challengeSelected));
-    if (wasCorrect) {
-      state.challengeCorrect += 1;
-    } else {
-      state.challengeMisses.push({
-        handNumber: state.challengeCompleted + 1,
-        hand: [...state.challengeHand],
-        userHold: [...state.challengeSelected].sort((a, b) => a - b),
-        optimalHolds: holds.map(hold => [...hold].sort((a, b) => a - b))
-      });
-    }
-
-    state.challengeCompleted += 1;
-
-    if (state.challengeCompleted >= CHALLENGE_HANDS) {
-      state.challengeFinished = true;
-    } else {
-      dealChallengeHand();
-    }
-
-    renderChallenge();
-  } catch (error) {
-    console.error(error);
-    window.alert("The strategy lookup failed for this hand. See the browser console.");
-  }
-}
-
-function leaveChallenge() {
-  if (!state.challengeFinished && state.challengeCompleted > 0) {
-    const leave = window.confirm(
-      `Exit the challenge? Your progress through ${state.challengeCompleted} hands will be lost.`
-    );
-    if (!leave) return;
-  }
-
-  const destination = state.challengePreviousMode || "train";
-  state.challengeFinished = false;
-  state.challengeHand = [];
-  state.challengeSelected.clear();
-  el.challengeReview.classList.add("hidden");
-  setMode(destination);
-}
-
-function renderChallengeCertificate() {
-  const score = state.challengeCorrect;
-  const misses = CHALLENGE_HANDS - score;
-  const percentage = 100 * score / CHALLENGE_HANDS;
-  const passed = score >= CHALLENGE_PASSING_SCORE;
-  const date = new Intl.DateTimeFormat(undefined, {
-    month: "long",
-    day: "numeric",
-    year: "numeric"
-  }).format(new Date());
-
-  el.challengeSummary.replaceChildren();
-
-  if (passed) {
-    const perfect = score === CHALLENGE_HANDS;
-    const certificate = document.createElement("div");
-    certificate.className = "certificate" + (perfect ? " grand-master" : "");
-    certificate.innerHTML = perfect ? `
-      <div class="grand-master-rays" aria-hidden="true"></div>
-      <div class="grand-master-stars" aria-hidden="true">♠ · ♦ · ♣ · ♥</div>
-      <div class="certificate-small">CASA DEL JEFE · HALL OF MASTERS</div>
-      <div class="certificate-title">JACKS OR BETTER<br>GRAND MASTER</div>
-      <div class="certificate-rule"></div>
-      <p>This certifies a flawless performance in the ${CHALLENGE_HANDS}-hand El Jefe Jacks or Better Challenge.</p>
-      <div class="certificate-score">${CHALLENGE_HANDS} / ${CHALLENGE_HANDS} · 100%</div>
-      <div class="grand-master-crest" aria-hidden="true">♛</div>
-      <div class="grand-master-subtitle">Perfect Strategy</div>
-      <p>Certified by El Jefe</p>
-      <p>${date}</p>
-      <div class="certificate-share">Screenshot this Grand Master certificate and send it to the group text thread.</div>
-    ` : `
-      <div class="certificate-corner top-left">♠</div>
-      <div class="certificate-corner top-right red">♥</div>
-      <div class="certificate-corner bottom-left red">♦</div>
-      <div class="certificate-corner bottom-right">♣</div>
-      <div class="certificate-small">CERTIFICATE OF VIDEO POKER READINESS</div>
-      <div class="certificate-title">EL JEFE APPROVED</div>
-      <div class="certificate-rule"></div>
-      <p>This certifies that the holder successfully completed the<br>
-      <strong>200-Hand El Jefe Challenge</strong></p>
-      <div class="certificate-score">${score} / ${CHALLENGE_HANDS} &nbsp;·&nbsp; ${percentage.toFixed(1)}%</div>
-      <p class="certificate-declaration">You are now approved to play<br>
-      <strong>Jacks or Better in Las Vegas.</strong></p>
-      <div class="certificate-date">Issued ${date}</div>
-      <div class="certificate-signature">El Jefe</div>
-      <div class="certificate-signature-label">Official Video Poker Authority</div>
-      <div class="certificate-share">Take a screenshot and send it to the group text thread.</div>
-    `;
-    el.challengeSummary.append(certificate);
-  } else {
-    const result = document.createElement("div");
-    result.className = "challenge-fail";
-    result.innerHTML = `
-      <div class="challenge-fail-icon">♠</div>
-      <h2>Not Quite El Jefe Approved</h2>
-      <div class="challenge-final-score">${score} / ${CHALLENGE_HANDS} &nbsp;·&nbsp; ${percentage.toFixed(1)}%</div>
-      <p>You missed ${misses} hands. A passing score is 190 out of 200.</p>
-      <p><strong>You are not quite ready to put money into a Jacks or Better machine.</strong></p>
-      <p>Spend a little more time in Train mode, then try the challenge again.</p>
-    `;
-    el.challengeSummary.append(result);
-  }
-
-  const reviewLink = document.createElement("button");
-  reviewLink.type = "button";
-  reviewLink.className = "challenge-review-link";
-  reviewLink.textContent = `See missed hands (${state.challengeMisses.length})`;
-  reviewLink.onclick = showChallengeReview;
-  el.challengeSummary.append(reviewLink);
-
-  const buttons = document.createElement("div");
-  buttons.className = "challenge-summary-actions";
-
-  const retry = document.createElement("button");
-  retry.type = "button";
-  retry.className = "primary";
-  retry.textContent = "Try Again";
-  retry.onclick = startChallenge;
-
-  const returnButton = document.createElement("button");
-  returnButton.type = "button";
-  returnButton.textContent = "Return to Trainer";
-  returnButton.onclick = () => {
-    state.challengePreviousMode = "train";
-    leaveChallenge();
+(() => {
+  const S = window.LetItRideStrategy;
+  if (!S) throw new Error("LetItRideStrategy did not load.");
+
+  const $ = selector => document.querySelector(selector);
+  const $$ = selector => [...document.querySelectorAll(selector)];
+  const SUIT_CLASSES = ["suit-hearts", "suit-diamonds", "suit-clubs", "suit-spades"];
+  const STORAGE_KEY = "casaLetItRidePlayV3";
+  const CHALLENGE_HANDS = 200;
+  const CHALLENGE_PASSING_HANDS = 196;
+  const DECISION_TRANSITION_LOCK_MS = 120;
+
+  const el = {
+    tabs: $$(".mode-tab"),
+    panels: { play: $("#playPanel"), train: $("#trainPanel"), lookup: $("#lookupPanel") },
+    modeTabs: $("#modeTabs"),
+    challengeLaunch: $("#challengeLaunch"),
+    challengePanel: $("#challengePanel"),
+    challengeGame: $("#challengeGame"),
+    challengeSummary: $("#challengeSummary"),
+    challengeProgress: $("#challengeProgress"),
+    challengeCommunity: $("#challengeCommunity"),
+    challengePlayer: $("#challengePlayer"),
+    challengeBets: $("#challengeBets"),
+    challengeExit: $("#challengeExit"),
+
+    playBalance: $("#playBalance"),
+    playAccuracy: $("#playAccuracy"),
+    playDecisionIndicator: $("#playDecisionIndicator"),
+    playCommunity: $("#playCommunity"),
+    playPlayer: $("#playPlayer"),
+    playBets: $("#playBets"),
+    playMessage: $("#playMessage"),
+    playDeal: $("#playDeal"),
+    playChart: $("#playBalanceChart"),
+    playChartSummary: $("#playChartSummary"),
+    playDeltaSummary: $("#playDeltaSummary"),
+    playMistakeCount: $("#playMistakeCount"),
+    playMistakeList: $("#playMistakeList"),
+    resetPlay: $("#resetPlay"),
+
+    trainCommunity: $("#trainCommunity"),
+    trainPlayer: $("#trainPlayer"),
+    trainBets: $("#trainBets"),
+    trainFeedback: $("#trainFeedback"),
+    trainNew: $("#trainNew"),
+    trainScore: $("#trainScore"),
+    trainPercent: $("#trainPercent"),
+    resetTrain: $("#resetTrain"),
+
+    lookupPlayerHand: $("#lookupPlayerHand"),
+    lookupCommunityHand: $("#lookupCommunityHand"),
+    lookupPrompt: $("#lookupPrompt"),
+    rankPicker: $("#rankPicker"),
+    suitPicker: $("#suitPicker"),
+    clearLookup: $("#clearLookup"),
+    findStrategy: $("#findStrategy"),
+    lookupFeedback: $("#lookupFeedback"),
+    updateNotice: $("#updateNotice"),
+    reloadUpdate: $("#reloadUpdate")
   };
 
-  buttons.append(retry, returnButton);
-  el.challengeSummary.append(buttons);
-}
-
-function describeStoredHold(cards) {
-  return cards.length ? cards.map(label).join(" ") : "Discard all five cards";
-}
-
-function renderChallengeReview() {
-  el.challengeReview.replaceChildren();
-
-  const headingRow = document.createElement("div");
-  headingRow.className = "challenge-review-heading";
-  const headingText = document.createElement("div");
-  headingText.innerHTML = `<div class="challenge-kicker">EL JEFE CHALLENGE</div><h2>Missed hands</h2>`;
-  const back = document.createElement("button");
-  back.type = "button";
-  back.className = "challenge-exit";
-  back.textContent = "Back to results";
-  back.onclick = () => {
-    el.challengeReview.classList.add("hidden");
-    el.challengeSummary.classList.remove("hidden");
-  };
-  headingRow.append(headingText, back);
-  el.challengeReview.append(headingRow);
-
-  const intro = document.createElement("p");
-  intro.className = "challenge-review-intro";
-  intro.textContent = state.challengeMisses.length
-    ? `${state.challengeMisses.length} hand${state.challengeMisses.length === 1 ? "" : "s"} to review.`
-    : "Perfect challenge. There were no missed hands.";
-  el.challengeReview.append(intro);
-
-  if (!state.challengeMisses.length) return;
-
-  const list = document.createElement("div");
-  list.className = "missed-hand-list";
-
-  state.challengeMisses.forEach((miss) => {
-    const item = document.createElement("article");
-    item.className = "missed-hand-card";
-
-    const number = document.createElement("div");
-    number.className = "missed-hand-number";
-    number.textContent = `Hand ${miss.handNumber}`;
-
-    const hand = document.createElement("div");
-    hand.className = "mini-hand challenge-review-hand";
-    miss.hand.forEach(card => hand.append(miniCard(card)));
-
-    const decisions = document.createElement("div");
-    decisions.className = "missed-hold-grid";
-
-    const yourDecision = document.createElement("div");
-    yourDecision.className = "missed-hold-row";
-    yourDecision.innerHTML = '<span>Your hold</span>';
-    const yourValue = document.createElement("strong");
-    yourValue.className = "incorrect-decision";
-    yourValue.textContent = describeStoredHold(miss.userHold);
-    yourDecision.append(yourValue);
-
-    const correctDecision = document.createElement("div");
-    correctDecision.className = "missed-hold-row";
-    correctDecision.innerHTML = `<span>${miss.optimalHolds.length > 1 ? "Correct holds" : "Correct hold"}</span>`;
-    const correctValue = document.createElement("strong");
-    correctValue.className = "correct-decision";
-    correctValue.textContent = miss.optimalHolds.map(describeStoredHold).join("  OR  ");
-    correctDecision.append(correctValue);
-
-    decisions.append(yourDecision, correctDecision);
-    item.append(number, hand, decisions);
-    list.append(item);
-  });
-
-  el.challengeReview.append(list);
-}
-
-function showChallengeReview() {
-  el.challengeSummary.classList.add("hidden");
-  el.challengeReview.classList.remove("hidden");
-  renderChallengeReview();
-  el.challengeReview.scrollIntoView({ block:"start" });
-}
-
-function renderChallenge() {
-  el.challengeLaunch.disabled = !state.strategy;
-  if (!state.challengeFinished) el.challengeReview.classList.add("hidden");
-  el.challengeActive.classList.toggle("hidden", state.challengeFinished);
-  el.challengeSummary.classList.toggle("hidden", !state.challengeFinished);
-
-  if (state.challengeFinished) {
-    renderChallengeCertificate();
-    return;
-  }
-
-  el.challengeProgress.textContent = `Hand ${state.challengeCompleted + 1} of ${CHALLENGE_HANDS}`;
-  el.challengeHand.replaceChildren();
-
-  for (const card of state.challengeHand) {
-    el.challengeHand.append(cardButton(card, {
-      selected: state.challengeSelected.has(card),
-      onClick: () => toggleChallengeCard(card)
-    }));
-  }
-
-  setMadeHand(el.challengeMadeHand, state.challengeHand);
-
-  const kept = state.challengeHand.filter(card => state.challengeSelected.has(card));
-  el.challengeSelection.textContent = kept.length
-    ? "Keep: " + kept.map(label).join(" ")
-    : "Discard all five cards";
-  el.challengeSubmit.disabled = !state.strategy;
-}
-
-function chooseRank(r) {
-  if (state.lookupHand.length >= 5) return;
-  state.pendingRank = r;
-  state.lookupResults = [];
-  renderLookup();
-}
-
-function chooseSuit(s) {
-  if (state.pendingRank === null || state.lookupHand.length >= 5) return;
-  const card = state.pendingRank + 1 + 13 * s;
-
-  if (state.lookupHand.includes(card)) {
-    el.lookupPrompt.textContent = `${label(card)} is already in the hand. Choose another suit.`;
-    return;
-  }
-
-  state.lookupHand.push(card);
-  state.pendingRank = null;
-  state.lookupResults = [];
-  renderLookup();
-}
-
-function removeLookupCard(card) {
-  state.lookupHand = state.lookupHand.filter(item => item !== card);
-  state.lookupResults = [];
-  renderLookup();
-}
-
-function clearLookup() {
-  state.lookupHand = [];
-  state.pendingRank = null;
-  state.lookupResults = [];
-  renderLookup();
-}
-
-function miniCard(card) {
-  const span = document.createElement("span");
-  span.className = `mini-card suit-${suitClass(card)}`;
-
-  const topSuit = document.createElement("span");
-  topSuit.className = "mini-card-suit mini-card-suit-top";
-  topSuit.textContent = SUITS[suit(card)];
-
-  const rankText = document.createElement("span");
-  rankText.className = "mini-card-rank";
-  rankText.textContent = RANKS[rank(card)];
-
-  const bottomSuit = document.createElement("span");
-  bottomSuit.className = "mini-card-suit mini-card-suit-bottom";
-  bottomSuit.textContent = SUITS[suit(card)];
-
-  span.append(topSuit, rankText, bottomSuit);
-  span.setAttribute("aria-label", label(card));
-  return span;
-}
-
-function importPlayHand() {
-  if (state.playHand.length !== 5 || ["dealing", "drawing"].includes(state.playPhase)) return;
-
-  state.lookupHand = [...state.playHand];
-  state.pendingRank = null;
-  state.lookupResults = [];
-  renderLookup();
-}
-
-function renderLookupResults() {
-  el.lookupFeedback.className = "lookup-feedback";
-  el.lookupFeedback.replaceChildren();
-  if (!state.lookupResults.length) return;
-
-  const heading = document.createElement("p");
-  heading.className = "result-heading";
-  heading.textContent = state.lookupResults.length === 1 ? "Optimal hold" : "Tied optimal holds";
-  el.lookupFeedback.append(heading);
-
-  const results = document.createElement("div");
-  results.className = "hold-results";
-
-  state.lookupResults.forEach((keeper, index) => {
-    const box = document.createElement("div");
-    box.className = "hold-result";
-
-    if (state.lookupResults.length > 1) {
-      const title = document.createElement("div");
-      title.className = "hold-result-label";
-      title.textContent = `Option ${index + 1}`;
-      box.append(title);
-    }
-
-    const cards = state.lookupHand.filter(card => keeper.has(card));
-
-    if (cards.length === 0) {
-      const discard = document.createElement("span");
-      discard.className = "discard-all";
-      discard.textContent = "Discard all five cards";
-      box.append(discard);
-    } else {
-      const row = document.createElement("div");
-      row.className = "mini-hand";
-      cards.forEach(card => row.append(miniCard(card)));
-      box.append(row);
-    }
-
-    results.append(box);
-  });
-
-  el.lookupFeedback.append(results);
-}
-
-function renderLookup() {
-  el.lookupHand.replaceChildren();
-  state.lookupHand.forEach(card => el.lookupHand.append(cardButton(card, { onClick: () => removeLookupCard(card) })));
-  for (let i = state.lookupHand.length; i < 5; i += 1) {
-    el.lookupHand.append(cardButton(1, { placeholder: true }));
-  }
-
-  el.rankPicker.replaceChildren();
-  RANKS.forEach((rankLabel, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "picker-button" + (state.pendingRank === index ? " active" : "");
-    button.textContent = rankLabel;
-    button.disabled = state.lookupHand.length >= 5;
-    button.onclick = () => chooseRank(index);
-    el.rankPicker.append(button);
-  });
-
-  el.suitPicker.replaceChildren();
-  SUITS.forEach((symbol, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `picker-button suit-button suit-${["hearts", "diamonds", "clubs", "spades"][index]}`;
-    button.textContent = symbol;
-    button.disabled = state.pendingRank === null || state.lookupHand.length >= 5;
-    button.onclick = () => chooseSuit(index);
-    el.suitPicker.append(button);
-  });
-
-  if (state.lookupHand.length === 5) {
-    el.lookupPrompt.textContent = "Hand complete. Tap a card to remove it, or find the best hold.";
-  } else if (state.pendingRank === null) {
-    el.lookupPrompt.textContent = `Choose a rank (${state.lookupHand.length}/5 cards entered)`;
-  } else {
-    el.lookupPrompt.textContent = `Choose the suit for ${RANKS[state.pendingRank]}`;
-  }
-
-  el.findHold.disabled = !state.strategy || state.lookupHand.length !== 5;
-  el.importFromPlay.disabled =
-    state.playHand.length !== 5 || ["dealing", "drawing"].includes(state.playPhase);
-  renderLookupResults();
-}
-
-function findBestHold() {
-  try {
-    state.lookupResults = optimal(state.lookupHand);
-    renderLookup();
-  } catch (error) {
-    console.error(error);
-    el.lookupFeedback.textContent = "Strategy lookup failed for this hand. See the browser console.";
-    el.lookupFeedback.className = "lookup-feedback feedback error";
-  }
-}
-
-function formatUnits(value) {
-  return `${value} ${Math.abs(value) === 1 ? "unit" : "units"}`;
-}
-
-function deltaLabel(value) {
-  const rounded = Math.round(value * 10) / 10;
-  if (rounded === 0) return "0 units";
-  return `${rounded > 0 ? "+" : "−"}${Math.abs(rounded)} ${Math.abs(rounded) === 1 ? "unit" : "units"}`;
-}
-
-function togglePlayCard(card) {
-  if (state.playPhase !== "holding") return;
-  state.playHeld.has(card) ? state.playHeld.delete(card) : state.playHeld.add(card);
-  renderPlay();
-}
-
-function sleep(milliseconds) {
-  return new Promise(resolve => window.setTimeout(resolve, milliseconds));
-}
-
-async function startPlayHand() {
-  if (["dealing", "drawing"].includes(state.playPhase)) return;
-
-  state.playBalance -= WAGER;
-  state.playOptimalBalance -= WAGER;
-  savePlaySession();
-
-  state.playDeck = deck();
-  state.playHand = state.playDeck.slice(0, 5);
-  state.playDeck = state.playDeck.slice(5);
-  state.playHeld.clear();
-  state.playHiddenPositions = new Set([0, 1, 2, 3, 4]);
-  state.playPhase = "dealing";
-  playFeedback("", "");
-  clearPlayDecisionIndicator();
-  renderPlay();
-  renderLookup();
-
-  for (let position = 0; position < 5; position += 1) {
-    await sleep(115);
-    state.playHiddenPositions.delete(position);
-    renderPlay();
-  }
-
-  state.playPhase = "holding";
-  renderPlay();
-  renderLookup();
-}
-
-async function drawPlayHand() {
-  if (state.playPhase !== "holding") return;
-
-  const initialHand = [...state.playHand];
-  const playerHold = [...state.playHeld].sort((a, b) => a - b);
-  const orderedDrawPile = [...state.playDeck];
-  let decisionWasCorrect = null;
-  let optimalHold = null;
-  let optimalHolds = [];
-
-  if (state.strategy) {
-    try {
-      optimalHolds = optimal(initialHand);
-      decisionWasCorrect = optimalHolds.some(hold => equal(hold, state.playHeld));
-
-      // If the player's hold is optimal, use that same hold so both paths match exactly.
-      // Otherwise use the first optimal hold stored in the strategy table.
-      optimalHold = decisionWasCorrect
-        ? new Set(state.playHeld)
-        : optimalHolds[0];
-    } catch (error) {
-      console.error("Could not score this Play decision.", error);
-    }
-  }
-
-  let optimalResult = null;
-  if (optimalHold) {
-    const optimalFinalHand = [...initialHand];
-    const optimalReplacementPositions = initialHand
-      .map((card, index) => optimalHold.has(card) ? -1 : index)
-      .filter(index => index >= 0);
-
-    optimalReplacementPositions.forEach((position, index) => {
-      optimalFinalHand[position] = orderedDrawPile[index];
-    });
-
-    optimalResult = evaluateHand(optimalFinalHand);
-  }
-
-  const replacementPositions = initialHand
-    .map((card, index) => state.playHeld.has(card) ? -1 : index)
-    .filter(index => index >= 0);
-
-  const drawnCards = orderedDrawPile.slice(0, replacementPositions.length);
-  state.playDeck = orderedDrawPile.slice(replacementPositions.length);
-
-  replacementPositions.forEach((position, index) => {
-    state.playHand[position] = drawnCards[index];
-  });
-
-  state.playPhase = "drawing";
-  state.playHiddenPositions = new Set(replacementPositions);
-  playFeedback("", "");
-  renderPlay();
-
-  for (const position of replacementPositions) {
-    await sleep(140);
-    state.playHiddenPositions.delete(position);
-    renderPlay();
-  }
-
-  state.playPhase = "result";
-  state.playHeld.clear();
-
-  const result = evaluateHand(state.playHand);
-  state.playBalance += result.payout;
-  if (optimalResult) state.playOptimalBalance += optimalResult.payout;
-
-  if (decisionWasCorrect !== null) {
-    const handNumber = state.playAttempts + 1;
-    state.playAttempts += 1;
-    if (decisionWasCorrect) {
-      state.playCorrect += 1;
-    } else {
-      state.playMisses.push({
-        handNumber,
-        hand: [...initialHand],
-        userHold: playerHold,
-        optimalHolds: optimalHolds.map(hold => [...hold].sort((a, b) => a - b))
-      });
-    }
-  }
-
-  state.playBalanceHistory.push(state.playBalance);
-  state.playOptimalBalanceHistory.push(state.playOptimalBalance);
-  savePlaySession();
-
-  if (result.payout > 0) {
-    playFeedback(`${result.name} pays ${result.payout} units.`, "correct");
-  } else {
-    playFeedback("Pays 0 units.", "incorrect");
-  }
-
-  renderPlay();
-  renderLookup();
-
-  if (decisionWasCorrect !== null) {
-    flashPlayDecisionIndicator(decisionWasCorrect);
-  }
-}
-
-function resetPlayBalance() {
-  if (!window.confirm("Reset the balance, accuracy, bankroll history, and incorrect-hand review?")) return;
-  state.playBalance = 0;
-  state.playOptimalBalance = 0;
-  state.playAttempts = 0;
-  state.playCorrect = 0;
-  state.playBalanceHistory = [0];
-  state.playOptimalBalanceHistory = [0];
-  state.playMisses = [];
-  state.playPhase = "idle";
-  state.playHand = [];
-  state.playDeck = [];
-  state.playHeld.clear();
-  state.playHiddenPositions.clear();
-  savePlaySession();
-  playFeedback("Play session reset to zero.", "");
-  clearPlayDecisionIndicator();
-  renderPlay();
-  renderLookup();
-}
-
-function playAction() {
-  if (state.playPhase === "holding") drawPlayHand();
-  else if (!["dealing", "drawing"].includes(state.playPhase)) startPlayHand();
-}
-
-function scheduleBalanceChartDraw() {
-  if (balanceChartFrame) return;
-  balanceChartFrame = window.requestAnimationFrame(() => {
-    balanceChartFrame = 0;
-    drawBalanceChart();
-  });
-}
-
-function drawBalanceChart() {
-  const canvas = el.playBalanceChart;
-  if (!canvas || canvas.offsetParent === null) return;
-
-  const rect = canvas.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return;
-
-  const scale = window.devicePixelRatio || 1;
-  const width = Math.max(1, Math.round(rect.width * scale));
-  const height = Math.max(1, Math.round(rect.height * scale));
-  const actualValues = state.playBalanceHistory.length ? state.playBalanceHistory : [0];
-  const optimalValues = state.playOptimalBalanceHistory.length
-    ? state.playOptimalBalanceHistory
-    : [0];
-  const signature = `${width}x${height}:${state.playAttempts}:${state.playBalance}:${state.playOptimalBalance}:${actualValues.length}:${optimalValues.length}`;
-  if (signature === lastBalanceChartSignature) return;
-  lastBalanceChartSignature = signature;
-
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
-  }
-
-  const context = canvas.getContext("2d");
-  context.setTransform(scale, 0, 0, scale, 0, 0);
-  context.clearRect(0, 0, rect.width, rect.height);
-
-  const allValues = [...actualValues, ...optimalValues];
-  const pointCount = Math.max(actualValues.length, optimalValues.length);
-  const padding = { left: 10, right: 84, top: 12, bottom: 14 };
-  const chartWidth = Math.max(1, rect.width - padding.left - padding.right);
-  const chartHeight = Math.max(1, rect.height - padding.top - padding.bottom);
-
-  let minimum = Math.min(0, ...allValues);
-  let maximum = Math.max(0, ...allValues);
-  if (minimum === maximum) {
-    minimum -= 5;
-    maximum += 5;
-  } else {
-    const extra = Math.max(1, (maximum - minimum) * 0.1);
-    minimum -= extra;
-    maximum += extra;
-  }
-
-  const xFor = index => padding.left + (pointCount === 1 ? 0 : index * chartWidth / (pointCount - 1));
-  const yFor = value => padding.top + (maximum - value) * chartHeight / (maximum - minimum);
-  const zeroY = yFor(0);
-
-  context.save();
-  context.strokeStyle = "rgba(203, 191, 159, .45)";
-  context.lineWidth = 1;
-  context.setLineDash([5, 5]);
-  context.beginPath();
-  context.moveTo(padding.left, zeroY);
-  context.lineTo(rect.width - padding.right, zeroY);
-  context.stroke();
-  context.restore();
-
-  const buildPath = values => {
-    context.beginPath();
-    values.forEach((value, index) => {
-      const x = xFor(index);
-      const y = yFor(value);
-      if (index === 0) context.moveTo(x, y);
-      else context.lineTo(x, y);
-    });
+  const state = {
+    mode: "play",
+    play: loadPlay(),
+    train: { round: null, hands: 0, correct: 0 },
+    lookup: { cards: [], pendingRank: null },
+    challenge: { active: false, number: 0, correct: 0, round: null, misses: [] }
   };
 
-  if (actualValues.length > 1) {
-    context.save();
-    context.beginPath();
-    context.rect(0, 0, rect.width, Math.max(0, zeroY));
-    context.clip();
-    buildPath(actualValues);
-    context.lineTo(xFor(actualValues.length - 1), zeroY);
-    context.lineTo(xFor(0), zeroY);
-    context.closePath();
-    context.fillStyle = "rgba(76, 207, 121, .13)";
-    context.fill();
-    context.restore();
+  let balanceChartFrame = 0;
+  let lastBalanceChartSignature = "";
 
-    context.save();
-    context.beginPath();
-    context.rect(0, zeroY, rect.width, Math.max(0, rect.height - zeroY));
-    context.clip();
-    buildPath(actualValues);
-    context.lineTo(xFor(actualValues.length - 1), zeroY);
-    context.lineTo(xFor(0), zeroY);
-    context.closePath();
-    context.fillStyle = "rgba(255, 107, 107, .11)";
-    context.fill();
-    context.restore();
-
-    const drawClippedLine = (top, bottom, color) => {
-      context.save();
-      context.beginPath();
-      context.rect(0, top, rect.width, Math.max(0, bottom - top));
-      context.clip();
-      buildPath(actualValues);
-      context.strokeStyle = color;
-      context.lineWidth = 2.5;
-      context.lineJoin = "round";
-      context.lineCap = "round";
-      context.stroke();
-      context.restore();
+  function emptyPlay() {
+    return {
+      balance: 0,
+      optimalBalance: 0,
+      balanceHistory: [0],
+      optimalHistory: [0],
+      hands: 0,
+      accurateHands: 0,
+      mistakes: [],
+      round: null
     };
-
-    drawClippedLine(0, zeroY, "#4ccf79");
-    drawClippedLine(zeroY, rect.height, "#ff6b6b");
-  } else {
-    context.fillStyle = "#e7c86a";
-    context.beginPath();
-    context.arc(xFor(0), yFor(actualValues[0]), 3, 0, Math.PI * 2);
-    context.fill();
   }
 
-  if (optimalValues.length > 1) {
-    context.save();
-    buildPath(optimalValues);
-    context.strokeStyle = "#e7c86a";
-    context.lineWidth = 2;
-    context.lineJoin = "round";
-    context.lineCap = "round";
-    context.stroke();
-    context.restore();
-  }
-
-  const actualLast = actualValues[actualValues.length - 1];
-  context.fillStyle = actualLast >= 0 ? "#4ccf79" : "#ff6b6b";
-  context.beginPath();
-  context.arc(xFor(actualValues.length - 1), yFor(actualLast), 3.5, 0, Math.PI * 2);
-  context.fill();
-
-  const optimalLast = optimalValues[optimalValues.length - 1];
-  context.fillStyle = "#e7c86a";
-  context.beginPath();
-  context.arc(xFor(optimalValues.length - 1), yFor(optimalLast), 3, 0, Math.PI * 2);
-  context.fill();
-
-  // Show the current counterfactual difference between optimal play and the player.
-  const delta = optimalLast - actualLast;
-  const latestX = xFor(pointCount - 1);
-  const actualY = yFor(actualLast);
-  const optimalY = yFor(optimalLast);
-  const topY = Math.min(actualY, optimalY);
-  const bottomY = Math.max(actualY, optimalY);
-  const bracketX = latestX + 12;
-  const labelX = bracketX + 7;
-  const labelY = Math.min(rect.height - 11, Math.max(11, (topY + bottomY) / 2));
-  const deltaLabel = delta === 0
-    ? "0 units"
-    : `${delta > 0 ? "+" : "−"}${Math.abs(delta)} ${Math.abs(delta) === 1 ? "unit" : "units"}`;
-
-  context.save();
-  context.strokeStyle = "rgba(231, 200, 106, .78)";
-  context.fillStyle = "#f8f1df";
-  context.lineWidth = 1.4;
-  context.lineCap = "round";
-
-  if (Math.abs(actualY - optimalY) < 2.5) {
-    context.beginPath();
-    context.moveTo(bracketX - 4, actualY);
-    context.lineTo(bracketX + 4, actualY);
-    context.stroke();
-  } else {
-    context.beginPath();
-    context.moveTo(bracketX, topY);
-    context.lineTo(bracketX, bottomY);
-    context.moveTo(bracketX - 4, topY);
-    context.lineTo(bracketX + 4, topY);
-    context.moveTo(bracketX - 4, bottomY);
-    context.lineTo(bracketX + 4, bottomY);
-    context.stroke();
-  }
-
-  context.font = '700 10px system-ui, -apple-system, "Segoe UI", sans-serif';
-  context.textAlign = "left";
-  context.textBaseline = "middle";
-  context.fillText(deltaLabel, labelX, labelY);
-  context.restore();
-
-  canvas.setAttribute(
-    "aria-label",
-    `Line chart comparing your Play balance with optimal play. Current optimal-minus-you difference: ${deltaLabel}.`
-  );
-}
-
-function renderPlayMissedHands() {
-  el.playMissedCount.textContent = String(state.playMisses.length);
-  el.playMissedList.replaceChildren();
-
-  if (!state.playMisses.length) {
-    const empty = document.createElement("p");
-    empty.className = "play-missed-empty";
-    empty.textContent = "No incorrect hands yet this session.";
-    el.playMissedList.append(empty);
-    return;
-  }
-
-  state.playMisses.forEach(miss => {
-    const item = document.createElement("article");
-    item.className = "missed-hand-card play-missed-card";
-
-    const number = document.createElement("div");
-    number.className = "missed-hand-number";
-    number.textContent = `Hand ${miss.handNumber}`;
-
-    const hand = document.createElement("div");
-    hand.className = "mini-hand challenge-review-hand";
-    miss.hand.forEach(card => hand.append(miniCard(card)));
-
-    const decisions = document.createElement("div");
-    decisions.className = "missed-hold-grid";
-
-    const yourDecision = document.createElement("div");
-    yourDecision.className = "missed-hold-row";
-    yourDecision.innerHTML = "<span>Your hold</span>";
-    const yourValue = document.createElement("strong");
-    yourValue.className = "incorrect-decision";
-    yourValue.textContent = describeStoredHold(miss.userHold);
-    yourDecision.append(yourValue);
-
-    const correctDecision = document.createElement("div");
-    correctDecision.className = "missed-hold-row";
-    correctDecision.innerHTML = `<span>${miss.optimalHolds.length > 1 ? "Correct holds" : "Correct hold"}</span>`;
-    const correctValue = document.createElement("strong");
-    correctValue.className = "correct-decision";
-    correctValue.textContent = miss.optimalHolds.map(describeStoredHold).join("  OR  ");
-    correctDecision.append(correctValue);
-
-    decisions.append(yourDecision, correctDecision);
-    item.append(number, hand, decisions);
-    el.playMissedList.append(item);
-  });
-}
-
-function renderPlay() {
-  el.playBalance.textContent = formatUnits(state.playBalance);
-  el.playBalance.classList.toggle("negative", state.playBalance < 0);
-  el.playBalance.classList.toggle("positive", state.playBalance > 0);
-
-  const playAccuracy = state.playAttempts ? 100 * state.playCorrect / state.playAttempts : 0;
-  el.playAccuracy.textContent = playAccuracy.toFixed(1) + "%";
-  renderPlayMissedHands();
-  el.playChartSummary.textContent = `${state.playAttempts} completed ${state.playAttempts === 1 ? "hand" : "hands"}`;
-  const delta = Math.round((state.playOptimalBalance - state.playBalance) * 10) / 10;
-  el.playDeltaSummary.textContent = `Optimal − you: ${deltaLabel(delta)}`;
-  el.playDeltaSummary.classList.toggle("ahead", delta > 0);
-  el.playDeltaSummary.classList.toggle("behind", delta < 0);
-  scheduleBalanceChartDraw();
-
-  el.playHand.replaceChildren();
-
-  if (state.playHand.length === 0) {
-    for (let i = 0; i < 5; i += 1) {
-      el.playHand.append(cardButton(1, { cardBack: true }));
+  function loadPlay() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (!saved || typeof saved !== "object") return emptyPlay();
+      return {
+        ...emptyPlay(),
+        balance: Number(saved.balance) || 0,
+        optimalBalance: Number(saved.optimalBalance) || 0,
+        balanceHistory: Array.isArray(saved.balanceHistory) && saved.balanceHistory.length ? saved.balanceHistory : [0],
+        optimalHistory: Array.isArray(saved.optimalHistory) && saved.optimalHistory.length ? saved.optimalHistory : [0],
+        hands: Number(saved.hands) || 0,
+        accurateHands: Number(saved.accurateHands) || 0,
+        mistakes: Array.isArray(saved.mistakes) ? saved.mistakes.slice(-100) : []
+      };
+    } catch (error) {
+      console.warn("Could not load Let It Ride session.", error);
+      return emptyPlay();
     }
-  } else {
-    state.playHand.forEach((card, index) => {
-      el.playHand.append(cardButton(card, {
-        selected: state.playPhase === "holding" && state.playHeld.has(card),
-        disabled: state.playPhase !== "holding",
-        cardBack: state.playHiddenPositions.has(index),
-        onClick: () => togglePlayCard(card)
+  }
+
+  function savePlay() {
+    const p = state.play;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        balance: p.balance,
+        optimalBalance: p.optimalBalance,
+        balanceHistory: p.balanceHistory,
+        optimalHistory: p.optimalHistory,
+        hands: p.hands,
+        accurateHands: p.accurateHands,
+        mistakes: p.mistakes
       }));
-    });
-  }
-
-  el.resetBalance.disabled = ["dealing", "drawing"].includes(state.playPhase);
-
-  if (state.playPhase === "idle") {
-    el.playMadeHand.textContent = "";
-    el.playMadeHand.classList.remove("visible");
-    el.playSelection.textContent = "Press Deal to begin.";
-    el.playAction.textContent = "Deal";
-    el.playAction.disabled = false;
-  } else if (state.playPhase === "dealing") {
-    el.playMadeHand.textContent = "";
-    el.playMadeHand.classList.remove("visible");
-    el.playSelection.textContent = "Dealing...";
-    el.playAction.textContent = "Dealing...";
-    el.playAction.disabled = true;
-  } else if (state.playPhase === "drawing") {
-    el.playMadeHand.textContent = "";
-    el.playMadeHand.classList.remove("visible");
-    el.playSelection.textContent = "Drawing...";
-    el.playAction.textContent = "Drawing...";
-    el.playAction.disabled = true;
-  } else {
-    setMadeHand(el.playMadeHand, state.playHand);
-    el.playAction.disabled = false;
-
-    if (state.playPhase === "holding") {
-      const held = state.playHand.filter(card => state.playHeld.has(card));
-      el.playSelection.textContent = held.length ? "Hold: " + held.map(label).join(" ") : "Discard all five cards";
-      el.playAction.textContent = "Draw";
-    } else {
-      el.playSelection.textContent = "Hand complete.";
-      el.playAction.textContent = "Deal Next Hand";
-    }
-  }
-}
-
-async function loadURL() {
-  const response = await fetch("./JacksOrBetterStrategy.json");
-  if (!response.ok) throw new Error(response.status);
-  state.strategy = await response.json();
-  status("");
-  el.challengeLaunch.disabled = false;
-  renderTraining();
-  renderLookup();
-  renderChallenge();
-}
-
-el.trainTab.onclick = () => setMode("train");
-el.lookupTab.onclick = () => setMode("lookup");
-el.playTab.onclick = () => setMode("play");
-el.challengeLaunch.onclick = startChallenge;
-el.challengeSubmit.onclick = submitChallengeHold;
-el.exitChallenge.onclick = leaveChallenge;
-el.check.onclick = check;
-el.newHand.onclick = deal;
-el.reset.onclick = () => {
-  state.attempts = 0;
-  state.correct = 0;
-  saveTrainingScore();
-  renderTraining();
-};
-el.findHold.onclick = findBestHold;
-el.clearLookup.onclick = clearLookup;
-el.importFromPlay.onclick = importPlayHand;
-el.playAction.onclick = playAction;
-el.resetBalance.onclick = resetPlayBalance;
-
-deal();
-renderLookup();
-renderPlay();
-renderChallenge();
-
-if ("ResizeObserver" in window && el.playBalanceChart) {
-  new ResizeObserver(() => {
-    if (state.mode === "play") scheduleBalanceChartDraw();
-  }).observe(el.playBalanceChart);
-} else {
-  window.addEventListener("resize", () => {
-    if (state.mode === "play") scheduleBalanceChartDraw();
-  }, { passive: true });
-}
-
-loadURL().catch(error => {
-  console.error(error);
-  status("Strategy data could not be loaded. Reload the app or verify that JacksOrBetterStrategy.json is installed.", "error");
-});
-
-if ("serviceWorker" in navigator) {
-  let waitingWorker = null;
-  let reloadingForUpdate = false;
-
-  const showUpdateNotice = worker => {
-    if (!worker || !navigator.serviceWorker.controller || !el.updateNotice) return;
-    waitingWorker = worker;
-    el.updateNotice.classList.remove("hidden");
-  };
-
-  const watchedWorkers = new WeakSet();
-  const watchWorker = (registration, worker) => {
-    if (!worker || watchedWorkers.has(worker)) return;
-    watchedWorkers.add(worker);
-    const checkState = () => {
-      if (worker.state === "installed") showUpdateNotice(registration.waiting || worker);
-    };
-    worker.addEventListener("statechange", checkState);
-    checkState();
-  };
-
-  const watchRegistration = registration => {
-    if (registration.waiting) showUpdateNotice(registration.waiting);
-    watchWorker(registration, registration.installing);
-    registration.addEventListener("updatefound", () => watchWorker(registration, registration.installing));
-  };
-
-  const registerServiceWorker = async () => {
-    try {
-      const registration = await navigator.serviceWorker.register("./service-worker.js", { updateViaCache: "none" });
-      watchRegistration(registration);
     } catch (error) {
-      console.warn("Could not register the Jacks or Better service worker.", error);
+      console.warn("Could not save Let It Ride session.", error);
     }
-  };
+  }
 
-  if (el.reloadUpdate) {
-    el.reloadUpdate.addEventListener("click", () => {
-      if (!waitingWorker) return;
-      el.reloadUpdate.disabled = true;
-      el.reloadUpdate.textContent = "Reloading…";
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (reloadingForUpdate) return;
-        reloadingForUpdate = true;
-        window.location.reload();
-      }, { once: true });
-      waitingWorker.postMessage({ type: "SKIP_WAITING" });
+  function shuffledDeck() {
+    const deck = Array.from({ length: 52 }, (_, i) => i);
+    for (let i = deck.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return deck;
+  }
+
+  function newRound() {
+    return {
+      cards: shuffledDeck().slice(0, 5),
+      stage: 1,
+      actualActive: [true, true, true],
+      optimalActive: [true, true, true],
+      correctness: [],
+      decisions: [],
+      completed: false,
+      actionLockedUntil: 0
+    };
+  }
+
+  function cardElement(card, { back = false, small = false, removable = false, onClick = null, placeholder = false } = {}) {
+    const node = document.createElement(removable || onClick ? "button" : "div");
+    if (node.tagName === "BUTTON") node.type = "button";
+    node.className = `card${small ? " small" : ""}${back ? " card-back" : ""}${placeholder ? " placeholder" : ""}`;
+
+    if (placeholder) {
+      node.textContent = "+";
+      node.setAttribute("aria-label", "Empty card slot");
+    } else if (back) {
+      node.setAttribute("aria-label", "Face-down card");
+    } else {
+      const suitClass = SUIT_CLASSES[S.suitOf(card)];
+      node.classList.add(suitClass);
+      node.innerHTML = `
+        <span class="card-suit card-suit-top ${suitClass}">${S.SUITS[S.suitOf(card)]}</span>
+        <span class="card-rank ${suitClass}">${S.RANKS[S.rankOf(card)]}</span>
+        <span class="card-suit card-suit-bottom ${suitClass}">${S.SUITS[S.suitOf(card)]}</span>`;
+      node.setAttribute("aria-label", S.label(card));
+    }
+
+    if (onClick) node.addEventListener("click", onClick);
+    return node;
+  }
+
+  function renderCards(container, cards, options = {}) {
+    container.replaceChildren();
+    cards.forEach((card, index) => {
+      const back = options.backFrom !== undefined && index >= options.backFrom;
+      container.append(cardElement(card, { back, small: options.small }));
     });
   }
 
-  window.addEventListener("load", () => {
-    if ("requestIdleCallback" in window) window.requestIdleCallback(registerServiceWorker, { timeout: 2500 });
-    else window.setTimeout(registerServiceWorker, 750);
-  }, { once: true });
-}
+  function actionText(action) {
+    if (action === "ride") return "Let It Ride";
+    if (action === "pull") return "Pull Back";
+    return "Either Action";
+  }
+
+  function strategyFor(round) {
+    return round.stage === 1
+      ? S.firstDecision(round.cards.slice(0, 3))
+      : S.secondDecision(round.cards.slice(0, 4));
+  }
+
+  function visibleCardsForStage(round, stage = round.stage) {
+    return stage === 1 ? round.cards.slice(0, 3) : round.cards.slice(0, 4);
+  }
+
+  function decisionCorrect(userAction, optimalAction) {
+    return optimalAction === "indifferent" || userAction === optimalAction;
+  }
+
+  // The physical table is labeled $, 2, 1 from left to right.
+  // The First Decision acts on the right-hand 1 wager; the Second Decision acts on the middle 2 wager.
+  function betIndexForStage(stage) {
+    if (stage === 1) return 2;
+    if (stage === 2) return 1;
+    return -1;
+  }
+
+  function alignBetGridToMiddleCard(container) {
+    if (!container) return;
+    const table = container.closest(".lir-table");
+    const playerCards = table ? table.querySelectorAll(".player-zone .card") : [];
+    const middleSpot = container.querySelector(".bet-column:nth-child(2) .bet-spot");
+    if (playerCards.length < 3 || !middleSpot) return;
+
+    // Measure from an unshifted rail, then anchor the center chip to the
+    // center of the player's middle card in the current browser layout.
+    container.style.setProperty("--bet-align-x", "0px");
+    const cardRect = playerCards[1].getBoundingClientRect();
+    const spotRect = middleSpot.getBoundingClientRect();
+    if (!cardRect.width || !spotRect.width) return;
+
+    const cardCenter = cardRect.left + cardRect.width / 2;
+    const spotCenter = spotRect.left + spotRect.width / 2;
+    container.style.setProperty("--bet-align-x", `${(cardCenter - spotCenter).toFixed(2)}px`);
+  }
+
+  function alignAllBetGrids() {
+    [el.playBets, el.trainBets, el.challengeBets].forEach(container => {
+      if (container && container.offsetParent !== null) alignBetGridToMiddleCard(container);
+    });
+  }
+
+  function renderBetGrid(container, round, handler, { showActions = true } = {}) {
+    container.replaceChildren();
+    const spotLabels = ["$", "2", "1"];
+    const activeIndex = round && !round.completed ? betIndexForStage(round.stage) : -1;
+    const actionsActive = Boolean(round && showActions && activeIndex >= 1 && activeIndex <= 2);
+
+    for (let i = 0; i < 3; i += 1) {
+      const column = document.createElement("div");
+      column.className = "bet-column";
+      if (actionsActive && activeIndex === i) column.classList.add("active-decision");
+
+      const top = document.createElement("div");
+      top.className = "bet-top";
+      const spot = document.createElement("div");
+      spot.className = "bet-spot";
+      spot.dataset.spotLabel = spotLabels[i];
+
+      if (round && round.actualActive[i]) {
+        const chip = document.createElement("div");
+        chip.className = "bet-chip";
+        spot.append(chip);
+      }
+
+      top.append(spot);
+      column.append(top);
+      container.append(column);
+    }
+
+    const cue = document.createElement("div");
+    cue.className = "bet-decision-cue";
+    if (!actionsActive) cue.classList.add("inactive");
+    cue.style.gridColumn = actionsActive ? String(activeIndex + 1) : "2";
+
+    const arrow = document.createElement("span");
+    arrow.className = "bet-decision-arrow";
+    arrow.textContent = "↑";
+    arrow.setAttribute("aria-hidden", "true");
+
+    const cueText = document.createElement("span");
+    cueText.className = "bet-decision-text";
+    cueText.textContent = actionsActive
+      ? (round.stage === 1 ? "Choose First Decision" : "Choose Second Decision")
+      : "Choose a Decision";
+    cue.append(arrow, cueText);
+
+    const actions = document.createElement("div");
+    actions.className = "lir-decision-actions";
+    actions.setAttribute("aria-label", actionsActive
+      ? (round.stage === 1 ? "First Decision actions" : "Second Decision actions")
+      : "Decision actions");
+    if (!actionsActive) actions.classList.add("inactive");
+
+    const makeButton = (action, label, keyText) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `lir-decision-button ${action}-button`;
+      button.setAttribute("aria-label", label);
+
+      const key = document.createElement("span");
+      key.className = `lir-action-key strategy-${action}`;
+      key.textContent = keyText;
+      key.setAttribute("aria-hidden", "true");
+
+      const buttonLabel = document.createElement("span");
+      buttonLabel.className = "lir-action-label";
+      buttonLabel.textContent = label;
+      buttonLabel.setAttribute("aria-hidden", "true");
+
+      button.append(key, buttonLabel);
+      if (actionsActive) button.addEventListener("click", () => handler(action));
+      else {
+        button.disabled = true;
+        button.tabIndex = -1;
+      }
+      return button;
+    };
+
+    actions.append(
+      makeButton("pull", "Pull Back", "P"),
+      makeButton("ride", "Let It Ride", "R")
+    );
+
+    container.append(cue, actions);
+    requestAnimationFrame(() => alignBetGridToMiddleCard(container));
+  }
+
+  function renderRoundCards(round, communityContainer, playerContainer, { playerBacksWhenEmpty = false } = {}) {
+    if (!round) {
+      communityContainer.replaceChildren(cardElement(0, { back: true }), cardElement(0, { back: true }));
+      playerContainer.replaceChildren();
+      for (let i = 0; i < 3; i += 1) {
+        playerContainer.append(cardElement(0, playerBacksWhenEmpty ? { back: true } : { placeholder: true }));
+      }
+      return;
+    }
+    renderCards(playerContainer, round.cards.slice(0, 3));
+    communityContainer.replaceChildren();
+    communityContainer.append(cardElement(round.cards[3], { back: round.stage === 1 }));
+    communityContainer.append(cardElement(round.cards[4], { back: round.stage < 3 }));
+  }
+
+  function setPlayMessage(text, tone = "neutral") {
+    el.playMessage.textContent = text;
+    el.playMessage.classList.remove("win", "loss");
+    if (tone === "win" || tone === "loss") el.playMessage.classList.add(tone);
+  }
+
+  function clearPlayAccuracyIndicator() {
+    el.playDecisionIndicator.textContent = "";
+    el.playDecisionIndicator.className = "play-decision-indicator";
+    el.playDecisionIndicator.setAttribute("aria-label", "");
+  }
+
+  function flashPlayAccuracyIndicator(handCorrect) {
+    const symbol = handCorrect ? "+" : "−";
+    const resultClass = handCorrect ? "correct" : "incorrect";
+    const spokenText = handCorrect ? "Hand played accurately" : "Hand included an incorrect decision";
+
+    el.playDecisionIndicator.textContent = symbol;
+    el.playDecisionIndicator.setAttribute("aria-label", spokenText);
+    el.playDecisionIndicator.className = "play-decision-indicator";
+    void el.playDecisionIndicator.offsetWidth;
+    el.playDecisionIndicator.classList.add("visible", resultClass, "pulse");
+  }
+
+  function startPlayHand() {
+    if (state.play.round && !state.play.round.completed) return;
+    clearPlayAccuracyIndicator();
+    const round = newRound();
+    round.balanceBefore = state.play.balance;
+    round.optimalBefore = state.play.optimalBalance;
+    state.play.balance -= 3;
+    state.play.optimalBalance -= 3;
+    state.play.round = round;
+    setPlayMessage("");
+    renderPlay();
+  }
+
+  function answerPlay(action) {
+    const p = state.play;
+    const round = p.round;
+    if (!round || round.completed) return;
+    if (performance.now() < (round.actionLockedUntil || 0)) return;
+
+    const stage = round.stage;
+    const strategy = strategyFor(round);
+    const correct = decisionCorrect(action, strategy.action);
+    const betIndex = betIndexForStage(stage);
+    const visible = visibleCardsForStage(round, stage);
+
+    if (action === "pull") {
+      round.actualActive[betIndex] = false;
+      p.balance += 1;
+    }
+
+    const optimalAction = strategy.action === "indifferent" ? action : strategy.action;
+    if (optimalAction === "pull") {
+      round.optimalActive[betIndex] = false;
+      p.optimalBalance += 1;
+    }
+
+    round.correctness.push(correct);
+    round.decisions.push({ stage, action, optimal: strategy.action, reason: strategy.reason });
+
+    if (!correct) {
+      p.mistakes.push({
+        stage,
+        cards: visible,
+        choice: action,
+        optimal: strategy.action,
+        reason: strategy.reason,
+        handNumber: p.hands + 1
+      });
+      p.mistakes = p.mistakes.slice(-100);
+    }
+
+    if (stage === 1) {
+      round.actionLockedUntil = performance.now() + DECISION_TRANSITION_LOCK_MS;
+      round.stage = 2;
+      setPlayMessage("");
+    } else {
+      round.stage = 3;
+      settlePlayRound();
+    }
+    renderPlay();
+  }
+
+  function settlePlayRound() {
+    const p = state.play;
+    const round = p.round;
+    const result = S.evaluateFive(round.cards);
+    const returnedPerActiveBet = result.payout >= 0 ? result.payout + 1 : 0;
+    const actualActiveCount = round.actualActive.filter(Boolean).length;
+    const optimalActiveCount = round.optimalActive.filter(Boolean).length;
+
+    p.balance += actualActiveCount * returnedPerActiveBet;
+    p.optimalBalance += optimalActiveCount * returnedPerActiveBet;
+    p.balance = roundTo(p.balance, 6);
+    p.optimalBalance = roundTo(p.optimalBalance, 6);
+    p.hands += 1;
+    const handCorrect = round.correctness.length === 2 && round.correctness.every(Boolean);
+    if (handCorrect) p.accurateHands += 1;
+    p.balanceHistory.push(p.balance);
+    p.optimalHistory.push(p.optimalBalance);
+    round.completed = true;
+
+    const net = roundTo(p.balance - round.balanceBefore, 6);
+    const sign = net > 0 ? "+" : "";
+    setPlayMessage(
+      `${result.name}: ${sign}${formatUnits(net)} on the hand with ${actualActiveCount} bet${actualActiveCount === 1 ? "" : "s"} riding.`,
+      net > 0 ? "win" : net < 0 ? "loss" : "neutral"
+    );
+    flashPlayAccuracyIndicator(handCorrect);
+    savePlay();
+  }
+
+  function renderPlay() {
+    const p = state.play;
+    renderRoundCards(p.round, el.playCommunity, el.playPlayer, { playerBacksWhenEmpty: true });
+    renderBetGrid(el.playBets, p.round, answerPlay, { showActions: true });
+    el.playBalance.textContent = formatUnits(p.balance);
+    el.playBalance.classList.toggle("positive", p.balance > 0);
+    el.playBalance.classList.toggle("negative", p.balance < 0);
+    el.playAccuracy.textContent = p.hands ? `${(100 * p.accurateHands / p.hands).toFixed(1)}%` : "0.0%";
+    el.playDeal.disabled = Boolean(p.round && !p.round.completed);
+    el.playDeal.textContent = p.round && p.round.completed ? "New Hand" : "Deal";
+    el.playChartSummary.textContent = `${p.hands} completed hand${p.hands === 1 ? "" : "s"}`;
+    const delta = roundTo(p.optimalBalance - p.balance, 6);
+    el.playDeltaSummary.textContent = `Optimal − you: ${formatUnits(delta)}`;
+    renderMistakes();
+    scheduleBalanceChartDraw();
+  }
+
+  function renderMistakes() {
+    const mistakes = state.play.mistakes;
+    el.playMistakeCount.textContent = mistakes.length;
+    el.playMistakeList.replaceChildren();
+    if (!mistakes.length) {
+      const empty = document.createElement("p");
+      empty.className = "play-missed-empty";
+      empty.textContent = "No incorrect decisions yet.";
+      el.playMistakeList.append(empty);
+      return;
+    }
+
+    [...mistakes].reverse().forEach(mistake => {
+      const card = document.createElement("article");
+      card.className = "mistake-card";
+      const title = document.createElement("strong");
+      title.textContent = `Hand ${mistake.handNumber} · Decision ${mistake.stage}`;
+      const hand = document.createElement("div");
+      hand.className = "hand";
+      mistake.cards.forEach(c => hand.append(cardElement(c, { small: true })));
+      const text = document.createElement("p");
+      text.textContent = `You chose ${actionText(mistake.choice)}. Optimal: ${actionText(mistake.optimal)}. ${mistake.reason}`;
+      card.append(title, hand, text);
+      el.playMistakeList.append(card);
+    });
+  }
+
+  function scheduleBalanceChartDraw() {
+    if (balanceChartFrame) return;
+    balanceChartFrame = window.requestAnimationFrame(() => {
+      balanceChartFrame = 0;
+      drawBalanceChart();
+    });
+  }
+
+  function drawBalanceChart() {
+    const canvas = el.playChart;
+    if (!canvas || canvas.offsetParent === null) return;
+
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    const ratio = window.devicePixelRatio || 1;
+    const pixelWidth = Math.max(1, Math.round(rect.width * ratio));
+    const pixelHeight = Math.max(1, Math.round(rect.height * ratio));
+    const actual = state.play.balanceHistory.length ? state.play.balanceHistory : [0];
+    const optimal = state.play.optimalHistory.length ? state.play.optimalHistory : [0];
+    const signature = `${pixelWidth}x${pixelHeight}:${state.play.hands}:${state.play.balance}:${state.play.optimalBalance}:${actual.length}:${optimal.length}`;
+    if (signature === lastBalanceChartSignature) return;
+    lastBalanceChartSignature = signature;
+
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+      canvas.width = pixelWidth;
+      canvas.height = pixelHeight;
+    }
+
+    const width = rect.width;
+    const height = rect.height;
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const values = [...actual, ...optimal, 0];
+    let min = Math.min(...values);
+    let max = Math.max(...values);
+    if (min === max) { min -= 1; max += 1; }
+    const pad = { left: 38, right: 12, top: 14, bottom: 26 };
+    const graphW = width - pad.left - pad.right;
+    const graphH = height - pad.top - pad.bottom;
+    const maxCount = Math.max(actual.length, optimal.length, 2);
+    const x = i => pad.left + (i / (maxCount - 1)) * graphW;
+    const y = value => pad.top + (max - value) / (max - min) * graphH;
+
+    ctx.strokeStyle = "rgba(60,75,68,.18)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i += 1) {
+      const yy = pad.top + i * graphH / 4;
+      ctx.beginPath(); ctx.moveTo(pad.left, yy); ctx.lineTo(width - pad.right, yy); ctx.stroke();
+    }
+    ctx.fillStyle = "#617168";
+    ctx.font = "11px system-ui";
+    ctx.textAlign = "right";
+    ctx.fillText(formatNumber(max), pad.left - 5, pad.top + 4);
+    ctx.fillText(formatNumber(min), pad.left - 5, pad.top + graphH);
+
+    function line(series, strokeStyle, dashed) {
+      if (!series.length) return;
+      ctx.save();
+      ctx.strokeStyle = strokeStyle;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash(dashed ? [6, 5] : []);
+      ctx.beginPath();
+      series.forEach((value, i) => i ? ctx.lineTo(x(i), y(value)) : ctx.moveTo(x(i), y(value)));
+      ctx.stroke();
+      ctx.restore();
+    }
+    line(actual, "#174a35", false);
+    line(optimal, "#9a7213", true);
+  }
+
+  function startTrainHand() {
+    state.train.round = newRound();
+    el.trainFeedback.textContent = "";
+    el.trainFeedback.className = "feedback lir-message";
+    renderTrain();
+  }
+
+  function answerTrain(action) {
+    const round = state.train.round;
+    if (!round || round.completed) return;
+    if (performance.now() < (round.actionLockedUntil || 0)) return;
+    const strategy = strategyFor(round);
+    const correct = decisionCorrect(action, strategy.action);
+    const index = betIndexForStage(round.stage);
+    if (action === "pull") round.actualActive[index] = false;
+    round.correctness.push(correct);
+    round.decisions.push({ stage: round.stage, action, optimal: strategy.action, reason: strategy.reason });
+
+    el.trainFeedback.textContent = correct ? "Correct!" : "Incorrect!";
+    el.trainFeedback.className = `feedback lir-message ${correct ? "correct" : "incorrect"}`;
+
+    if (round.stage === 1) {
+      round.actionLockedUntil = performance.now() + DECISION_TRANSITION_LOCK_MS;
+      round.stage = 2;
+    } else {
+      round.stage = 3;
+      round.completed = true;
+      const handCorrect = round.correctness.every(Boolean);
+      state.train.hands += 1;
+      if (handCorrect) state.train.correct += 1;
+    }
+    renderTrain();
+  }
+
+  function renderTrain() {
+    renderRoundCards(state.train.round, el.trainCommunity, el.trainPlayer);
+    renderBetGrid(el.trainBets, state.train.round, answerTrain, { showActions: true });
+    el.trainNew.disabled = Boolean(state.train.round && !state.train.round.completed);
+    el.trainNew.textContent = "New Hand";
+    el.trainScore.textContent = `${state.train.correct} / ${state.train.hands}`;
+    el.trainPercent.textContent = state.train.hands ? `${(100 * state.train.correct / state.train.hands).toFixed(1)}%` : "0.0%";
+  }
+
+  function buildPickers() {
+    el.rankPicker.replaceChildren();
+    S.RANKS.forEach((rank, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "picker-button rank-button";
+      button.textContent = rank;
+      button.addEventListener("click", () => {
+        state.lookup.pendingRank = index;
+        renderLookup();
+      });
+      el.rankPicker.append(button);
+    });
+
+    el.suitPicker.replaceChildren();
+    S.SUITS.forEach((suit, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `picker-button suit-button ${SUIT_CLASSES[index]}`;
+      button.textContent = suit;
+      button.addEventListener("click", () => addLookupCard(index));
+      el.suitPicker.append(button);
+    });
+  }
+
+  function addLookupCard(suit) {
+    const lookup = state.lookup;
+    if (lookup.pendingRank === null || lookup.cards.length >= 4) return;
+    const card = 13 * suit + lookup.pendingRank;
+    if (lookup.cards.includes(card)) {
+      el.lookupPrompt.textContent = `${S.label(card)} is already entered. Choose another suit.`;
+      return;
+    }
+    lookup.cards.push(card);
+    lookup.pendingRank = null;
+    el.lookupFeedback.replaceChildren();
+    renderLookup();
+  }
+
+  function removeLookupCard(index) {
+    state.lookup.cards.splice(index, 1);
+    state.lookup.pendingRank = null;
+    el.lookupFeedback.replaceChildren();
+    renderLookup();
+  }
+
+  function renderLookup() {
+    const lookup = state.lookup;
+    el.lookupPlayerHand.replaceChildren();
+    for (let i = 0; i < 3; i += 1) {
+      if (i < lookup.cards.length) {
+        el.lookupPlayerHand.append(cardElement(lookup.cards[i], { removable: true, onClick: () => removeLookupCard(i) }));
+      } else {
+        el.lookupPlayerHand.append(cardElement(0, { placeholder: true }));
+      }
+    }
+
+    el.lookupCommunityHand.replaceChildren();
+    if (lookup.cards.length === 4) {
+      el.lookupCommunityHand.append(cardElement(lookup.cards[3], { removable: true, onClick: () => removeLookupCard(3) }));
+    } else {
+      el.lookupCommunityHand.append(cardElement(0, { placeholder: true }));
+    }
+
+    $$("#rankPicker .picker-button").forEach((button, index) => {
+      button.classList.toggle("active", lookup.pendingRank === index);
+      button.disabled = lookup.cards.length >= 4;
+    });
+    $$("#suitPicker .picker-button").forEach(button => {
+      button.disabled = lookup.pendingRank === null || lookup.cards.length >= 4;
+    });
+
+    if (lookup.cards.length < 3) {
+      el.lookupPrompt.textContent = lookup.pendingRank === null
+        ? `Choose a rank for player card ${lookup.cards.length + 1}`
+        : `Choose the suit for ${S.RANKS[lookup.pendingRank]}`;
+    } else if (lookup.cards.length === 3) {
+      el.lookupPrompt.textContent = lookup.pendingRank === null
+        ? "Three-card lookup is ready. Find Strategy now, or add the revealed community card."
+        : `Choose the suit for the community ${S.RANKS[lookup.pendingRank]}`;
+    } else {
+      el.lookupPrompt.textContent = "Four-card lookup is ready. Tap any card to remove it.";
+    }
+    el.findStrategy.disabled = lookup.cards.length < 3;
+  }
+
+  function findLookupStrategy() {
+    const cards = state.lookup.cards;
+    if (cards.length < 3) return;
+    const stage = cards.length === 3 ? 1 : 2;
+    const strategy = stage === 1 ? S.firstDecision(cards) : S.secondDecision(cards);
+
+    el.lookupFeedback.replaceChildren();
+    const result = document.createElement("article");
+    result.className = "lookup-result-card";
+
+    const heading = document.createElement("div");
+    heading.className = "lookup-result-heading";
+    const bubble = document.createElement("span");
+    const bubbleType = strategy.action === "indifferent" ? "either" : strategy.action;
+    bubble.className = `lookup-decision-bubble ${bubbleType}`;
+    bubble.textContent = strategy.action === "indifferent" ? "EITHER" : strategy.action.toUpperCase();
+    const stageLabel = document.createElement("span");
+    stageLabel.className = "lookup-stage-label";
+    stageLabel.textContent = stage === 1 ? "First Decision" : "Second Decision";
+    heading.append(bubble, stageLabel);
+
+    const reason = document.createElement("div");
+    reason.className = "lookup-result-reason";
+    reason.textContent = strategy.reason;
+    result.append(heading, reason);
+    el.lookupFeedback.append(result);
+  }
+
+  function startChallenge() {
+    state.challenge = { active: true, number: 1, correct: 0, round: newRound(), misses: [] };
+    el.challengeLaunch.classList.add("hidden");
+    el.modeTabs.classList.add("hidden");
+    Object.values(el.panels).forEach(panel => panel.classList.add("hidden"));
+    el.challengePanel.classList.remove("hidden");
+    el.challengeGame.classList.remove("hidden");
+    el.challengeSummary.classList.add("hidden");
+    renderChallenge();
+  }
+
+  function answerChallenge(action) {
+    const c = state.challenge;
+    const round = c.round;
+    if (!c.active || !round || round.completed) return;
+    if (performance.now() < (round.actionLockedUntil || 0)) return;
+    const strategy = strategyFor(round);
+    const correct = decisionCorrect(action, strategy.action);
+    if (action === "pull") round.actualActive[betIndexForStage(round.stage)] = false;
+    round.correctness.push(correct);
+    round.decisions.push({ stage: round.stage, action, optimal: strategy.action, reason: strategy.reason, cards: visibleCardsForStage(round) });
+
+    if (round.stage === 1) {
+      round.actionLockedUntil = performance.now() + DECISION_TRANSITION_LOCK_MS;
+      round.stage = 2;
+      renderChallenge();
+      return;
+    }
+
+    round.stage = 3;
+    round.completed = true;
+    const handCorrect = round.correctness.every(Boolean);
+    if (handCorrect) c.correct += 1;
+    else c.misses.push({ number: c.number, decisions: round.decisions.filter((_, i) => !round.correctness[i]) });
+
+    if (c.number >= CHALLENGE_HANDS) finishChallenge();
+    else {
+      c.number += 1;
+      c.round = newRound();
+      renderChallenge();
+    }
+  }
+
+  function renderChallenge() {
+    const c = state.challenge;
+    el.challengeProgress.textContent = `Hand ${c.number} of ${CHALLENGE_HANDS}`;
+    renderRoundCards(c.round, el.challengeCommunity, el.challengePlayer);
+    renderBetGrid(el.challengeBets, c.round, answerChallenge, { showActions: true });
+  }
+
+  function finishChallenge() {
+    const c = state.challenge;
+    el.challengeGame.classList.add("hidden");
+    el.challengeSummary.classList.remove("hidden");
+    const percent = 100 * c.correct / CHALLENGE_HANDS;
+    const passed = c.correct >= CHALLENGE_PASSING_HANDS;
+    const perfect = c.correct === CHALLENGE_HANDS;
+    const today = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "long", day: "numeric" }).format(new Date());
+
+    let resultMarkup;
+    if (perfect) {
+      resultMarkup = `
+        <div class="certificate grand-master">
+          <div class="grand-master-rays" aria-hidden="true"></div>
+          <div class="grand-master-stars" aria-hidden="true">♠ · ♦ · ♣ · ♥</div>
+          <div class="certificate-small">CASA DEL JEFE · HALL OF MASTERS</div>
+          <div class="certificate-title">LET IT RIDE<br>GRAND MASTER</div>
+          <div class="certificate-rule"></div>
+          <p>This certifies a flawless performance in the ${CHALLENGE_HANDS}-hand El Jefe Let It Ride Challenge.</p>
+          <div class="certificate-score">${CHALLENGE_HANDS} / ${CHALLENGE_HANDS} · 100%</div>
+          <div class="grand-master-crest" aria-hidden="true">♛</div>
+          <div class="grand-master-subtitle">Perfect Strategy</div>
+          <p>Certified by El Jefe</p>
+          <p>${today}</p>
+          <div class="certificate-share">Screenshot this Grand Master certificate and send it to the group text thread.</div>
+        </div>`;
+    } else if (passed) {
+      resultMarkup = `
+        <div class="certificate">
+          <div class="certificate-small">CERTIFICATE OF LET IT RIDE READINESS</div>
+          <div class="certificate-title">EL JEFE APPROVED</div>
+          <div class="certificate-rule"></div>
+          <p>This certifies that the bearer completed the ${CHALLENGE_HANDS}-hand El Jefe Let It Ride Challenge with:</p>
+          <div class="certificate-score">${c.correct} / ${CHALLENGE_HANDS} · ${percent.toFixed(1)}%</div>
+          <p>You are now approved to play Let It Ride at Casa del Jefe.</p>
+          <p>${today}</p>
+          <div class="certificate-share">Screenshot this certificate and send it to the group text thread.</div>
+        </div>`;
+    } else {
+      resultMarkup = `
+        <div class="challenge-fail">
+          <h2>Not quite El Jefe approved</h2>
+          <div class="challenge-final-score">${c.correct} / ${CHALLENGE_HANDS} · ${percent.toFixed(1)}%</div>
+          <p>You need ${CHALLENGE_PASSING_HANDS} correct hands to pass. Practice the missed situations and try the challenge again.</p>
+        </div>`;
+    }
+
+    el.challengeSummary.innerHTML = `${resultMarkup}
+      <div class="challenge-summary-actions"><button class="primary" id="challengeAgain" type="button">Try Again</button><button id="challengeDone" type="button">Done</button></div>
+      <details class="review-details"><summary>Review missed hands (${c.misses.length})</summary><div id="challengeMisses"></div></details>`;
+    $("#challengeAgain").addEventListener("click", startChallenge);
+    $("#challengeDone").addEventListener("click", exitChallenge);
+    const list = $("#challengeMisses");
+    c.misses.forEach(miss => {
+      const article = document.createElement("article");
+      article.className = "mistake-card";
+      const title = document.createElement("strong");
+      title.textContent = `Hand ${miss.number}`;
+      article.append(title);
+      miss.decisions.forEach(d => {
+        const hand = document.createElement("div"); hand.className = "hand";
+        d.cards.forEach(card => hand.append(cardElement(card, { small: true })));
+        const text = document.createElement("p");
+        text.textContent = `Decision ${d.stage}: chose ${actionText(d.action)}; optimal ${actionText(d.optimal)}. ${d.reason}`;
+        article.append(hand, text);
+      });
+      list.append(article);
+    });
+  }
+
+  function exitChallenge() {
+    state.challenge.active = false;
+    el.challengePanel.classList.add("hidden");
+    el.challengeLaunch.classList.remove("hidden");
+    el.modeTabs.classList.remove("hidden");
+    setMode(state.mode);
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    el.tabs.forEach(tab => {
+      const active = tab.dataset.mode === mode;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", String(active));
+    });
+    Object.entries(el.panels).forEach(([name, panel]) => panel.classList.toggle("hidden", name !== mode));
+    if (mode === "train" && !state.train.round) startTrainHand();
+    if (mode === "lookup") renderLookup();
+    if (mode === "play") scheduleBalanceChartDraw();
+    requestAnimationFrame(alignAllBetGrids);
+  }
+
+  function resetPlay() {
+    if (!window.confirm("Reset the bankroll, accuracy, chart, and incorrect-decision history?")) return;
+    state.play = emptyPlay();
+    clearPlayAccuracyIndicator();
+    savePlay();
+    setPlayMessage("Press Deal to begin.");
+    renderPlay();
+  }
+
+  function roundTo(value, digits) {
+    const factor = 10 ** digits;
+    return Math.round((value + Number.EPSILON) * factor) / factor;
+  }
+
+  function formatNumber(value) {
+    return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  }
+
+  function formatUnits(value) {
+    const n = roundTo(value, 6);
+    return `${formatNumber(n)} unit${Math.abs(n) === 1 ? "" : "s"}`;
+  }
+
+  function formatSigned(value, digits) {
+    const text = Number(value).toFixed(digits).replace(/0+$/, "").replace(/\.$/, "");
+    return value > 0 ? `+${text}` : text;
+  }
+
+  function gcd(a, b) {
+    a = Math.abs(a); b = Math.abs(b);
+    while (b) [a, b] = [b, a % b];
+    return a || 1;
+  }
+
+  function reducedFraction(numerator, denominator) {
+    if (numerator === 0) return "0";
+    const d = gcd(numerator, denominator);
+    return `${numerator / d}/${denominator / d}`;
+  }
+
+  el.tabs.forEach(tab => tab.addEventListener("click", () => setMode(tab.dataset.mode)));
+  el.playDeal.addEventListener("click", startPlayHand);
+  el.resetPlay.addEventListener("click", resetPlay);
+  el.trainNew.addEventListener("click", startTrainHand);
+  el.resetTrain.addEventListener("click", () => {
+    state.train = { round: null, hands: 0, correct: 0 };
+    startTrainHand();
+  });
+  el.clearLookup.addEventListener("click", () => {
+    state.lookup = { cards: [], pendingRank: null };
+    el.lookupFeedback.replaceChildren();
+    renderLookup();
+  });
+  el.findStrategy.addEventListener("click", findLookupStrategy);
+  el.challengeLaunch.addEventListener("click", startChallenge);
+  el.challengeExit.addEventListener("click", exitChallenge);
+  window.addEventListener("keydown", event => {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+
+    if (event.key === "Enter" && !state.challenge.active) {
+      if (event.target instanceof HTMLButtonElement || event.target instanceof HTMLAnchorElement) return;
+      if (state.mode === "play" && !el.playDeal.disabled) {
+        event.preventDefault();
+        startPlayHand();
+      } else if (state.mode === "train") {
+        event.preventDefault();
+        startTrainHand();
+      }
+      return;
+    }
+
+    const activeRound = state.challenge.active ? state.challenge.round : state.mode === "play" ? state.play.round : state.mode === "train" ? state.train.round : null;
+    if (!activeRound || activeRound.completed) return;
+    if (event.key.toLowerCase() === "p") {
+      event.preventDefault();
+      state.challenge.active ? answerChallenge("pull") : state.mode === "play" ? answerPlay("pull") : answerTrain("pull");
+    }
+    if (event.key.toLowerCase() === "r") {
+      event.preventDefault();
+      state.challenge.active ? answerChallenge("ride") : state.mode === "play" ? answerPlay("ride") : answerTrain("ride");
+    }
+  });
+
+  window.addEventListener("resize", () => requestAnimationFrame(alignAllBetGrids));
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => requestAnimationFrame(alignAllBetGrids));
+  }
+
+  buildPickers();
+  renderLookup();
+  renderPlay();
+  renderTrain();
+  setMode("play");
+
+  if ("ResizeObserver" in window && el.playChart) {
+    new ResizeObserver(() => {
+      if (state.mode === "play") scheduleBalanceChartDraw();
+    }).observe(el.playChart);
+  } else {
+    window.addEventListener("resize", () => {
+      if (state.mode === "play") scheduleBalanceChartDraw();
+    }, { passive: true });
+  }
+
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    let waitingWorker = null;
+    let reloadingForUpdate = false;
+
+    const showUpdateNotice = worker => {
+      if (!worker || !navigator.serviceWorker.controller || !el.updateNotice) return;
+      waitingWorker = worker;
+      el.updateNotice.classList.remove("hidden");
+    };
+
+    const watchedWorkers = new WeakSet();
+    const watchWorker = (registration, worker) => {
+      if (!worker || watchedWorkers.has(worker)) return;
+      watchedWorkers.add(worker);
+      const checkState = () => {
+        if (worker.state === "installed") showUpdateNotice(registration.waiting || worker);
+      };
+      worker.addEventListener("statechange", checkState);
+      checkState();
+    };
+
+    const watchRegistration = registration => {
+      if (registration.waiting) showUpdateNotice(registration.waiting);
+      watchWorker(registration, registration.installing);
+      registration.addEventListener("updatefound", () => watchWorker(registration, registration.installing));
+    };
+
+    const registerServiceWorker = async () => {
+      try {
+        const registration = await navigator.serviceWorker.register("./service-worker.js", { updateViaCache: "none" });
+        watchRegistration(registration);
+      } catch (error) {
+        console.warn("Could not register the Let It Ride service worker.", error);
+      }
+    };
+
+    if (el.reloadUpdate) {
+      el.reloadUpdate.addEventListener("click", () => {
+        if (!waitingWorker) return;
+        el.reloadUpdate.disabled = true;
+        el.reloadUpdate.textContent = "Reloading…";
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (reloadingForUpdate) return;
+          reloadingForUpdate = true;
+          window.location.reload();
+        }, { once: true });
+        waitingWorker.postMessage({ type: "SKIP_WAITING" });
+      });
+    }
+
+    window.addEventListener("load", () => {
+      if ("requestIdleCallback" in window) window.requestIdleCallback(registerServiceWorker, { timeout: 2500 });
+      else window.setTimeout(registerServiceWorker, 750);
+    }, { once: true });
+  }
+})();

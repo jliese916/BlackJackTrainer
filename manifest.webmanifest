@@ -1,24 +1,13 @@
 {
-  "name": "Casa del Jefe \u2014 Video Poker Hall",
-  "short_name": "Video Poker Hall",
-  "description": "Full-pay 9/6 Jacks or Better training, complete strategy ladder, session review, and the El Jefe Challenge.",
-  "start_url": "./",
-  "scope": "./",
+  "name": "Casa del Jefe — Let It Ride Lounge",
+  "short_name": "Let It Ride",
+  "description": "Exact optimal-strategy Let It Ride trainer with Play, Train, Look Up, and the El Jefe Challenge.",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#07100d",
   "theme_color": "#07100d",
   "icons": [
-    {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    }
+    {"src":"./icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"./icon-512.png","sizes":"512x512","type":"image/png"}
   ]
 }
