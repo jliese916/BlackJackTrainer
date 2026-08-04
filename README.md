@@ -152,3 +152,12 @@ Then open `http://localhost:8000`.
 - Standardized the Train table statistics to **Hands / Accuracy** in one centered top panel.
 - Added the Training Room wordmark above the Train statistics for consistent table hierarchy.
 - Service-worker cache: `el-jefe-blackjack-v25`.
+
+## Version 26 changes
+
+- Allows normal vertical scrolling when a gesture begins over the bankroll chart.
+- Coalesces chart resize redraws and skips unchanged renders.
+- Delays service-worker registration until the page is idle.
+- Installs updates quietly and shows a footer notice instead of interrupting an active hand.
+- Adds **Reload Now** so the player chooses when a ready update activates.
+- Service-worker cache: `el-jefe-blackjack-v26`.

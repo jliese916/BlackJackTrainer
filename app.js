@@ -64,8 +64,13 @@ const elements = {
   challengeDealerTotal: $("#challengeDealerTotal"),
   challengeHands: $("#challengeHands"),
   challengeActions: $("#challengeActions"),
-  challengeExit: $("#challengeExit")
+  challengeExit: $("#challengeExit"),
+  updateNotice: $("#updateNotice"),
+  reloadUpdate: $("#reloadUpdate")
 };
+
+let balanceChartFrame = 0;
+let lastBalanceChartSignature = "";
 
 const state = {
   mode: "play",
@@ -1327,15 +1332,29 @@ function deltaLabel(value) {
   return `${rounded > 0 ? "+" : "−"}${number} ${Math.abs(rounded) === 1 ? "unit" : "units"}`;
 }
 
+function scheduleBalanceChartDraw() {
+  if (balanceChartFrame) return;
+  balanceChartFrame = window.requestAnimationFrame(() => {
+    balanceChartFrame = 0;
+    drawBalanceChart();
+  });
+}
+
 function drawBalanceChart() {
   const canvas = elements.playBalanceChart;
-  if (!canvas) return;
+  if (!canvas || canvas.offsetParent === null) return;
   const rect = canvas.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return;
 
   const scale = window.devicePixelRatio || 1;
   const pixelWidth = Math.max(1, Math.round(rect.width * scale));
   const pixelHeight = Math.max(1, Math.round(rect.height * scale));
+  const actualValues = state.play.balanceHistory.length ? state.play.balanceHistory : [state.play.balance];
+  const optimalValues = state.play.optimalBalanceHistory.length ? state.play.optimalBalanceHistory : [state.play.optimalBalance];
+  const signature = `${pixelWidth}x${pixelHeight}:${state.play.completedRounds}:${state.play.balance}:${state.play.optimalBalance}:${actualValues.length}:${optimalValues.length}`;
+  if (signature === lastBalanceChartSignature) return;
+  lastBalanceChartSignature = signature;
+
   if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
     canvas.width = pixelWidth;
     canvas.height = pixelHeight;
@@ -1344,9 +1363,6 @@ function drawBalanceChart() {
   const context = canvas.getContext("2d");
   context.setTransform(scale, 0, 0, scale, 0, 0);
   context.clearRect(0, 0, rect.width, rect.height);
-
-  const actualValues = state.play.balanceHistory.length ? state.play.balanceHistory : [state.play.balance];
-  const optimalValues = state.play.optimalBalanceHistory.length ? state.play.optimalBalanceHistory : [state.play.optimalBalance];
   const allValues = [...actualValues, ...optimalValues];
   const pointCount = Math.max(actualValues.length, optimalValues.length);
   const padding = { left:10, right:92, top:12, bottom:14 };
@@ -1581,7 +1597,7 @@ function renderPlay() {
   elements.playDeltaSummary.textContent = `Optimal − you: ${deltaLabel(delta)}`;
   elements.playDeltaSummary.classList.toggle("ahead", delta > 0);
   elements.playDeltaSummary.classList.toggle("behind", delta < 0);
-  window.requestAnimationFrame(drawBalanceChart);
+  scheduleBalanceChartDraw();
 
   elements.playDealer.replaceChildren();
   elements.playHands.replaceChildren();
@@ -1919,14 +1935,15 @@ function handleKeyboardShortcut(event) {
 }
 
 window.addEventListener("keydown", handleKeyboardShortcut);
-window.addEventListener("resize", () => {
-  if (state.mode === "play") window.requestAnimationFrame(drawBalanceChart);
-});
 if ("ResizeObserver" in window) {
   const chartObserver = new ResizeObserver(() => {
-    if (state.mode === "play") window.requestAnimationFrame(drawBalanceChart);
+    if (state.mode === "play") scheduleBalanceChartDraw();
   });
   chartObserver.observe(elements.playBalanceChart);
+} else {
+  window.addEventListener("resize", () => {
+    if (state.mode === "play") scheduleBalanceChartDraw();
+  }, { passive:true });
 }
 
 renderStrategyTables();
@@ -1935,5 +1952,55 @@ renderLookup();
 switchMode("play");
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(console.error));
+  let waitingWorker = null;
+  let reloadingForUpdate = false;
+
+  const showUpdateNotice = worker => {
+    if (!worker || !navigator.serviceWorker.controller || !elements.updateNotice) return;
+    waitingWorker = worker;
+    elements.updateNotice.classList.remove("hidden");
+  };
+
+  const watchedWorkers = new WeakSet();
+  const watchWorker = (registration, worker) => {
+    if (!worker || watchedWorkers.has(worker)) return;
+    watchedWorkers.add(worker);
+    const checkState = () => {
+      if (worker.state === "installed") showUpdateNotice(registration.waiting || worker);
+    };
+    worker.addEventListener("statechange", checkState);
+    checkState();
+  };
+  const watchRegistration = registration => {
+    if (registration.waiting) showUpdateNotice(registration.waiting);
+    watchWorker(registration, registration.installing);
+    registration.addEventListener("updatefound", () => watchWorker(registration, registration.installing));
+  };
+  const registerServiceWorker = async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("./service-worker.js", { updateViaCache:"none" });
+      watchRegistration(registration);
+    } catch (error) {
+      console.warn("Could not register the Blackjack service worker.", error);
+    }
+  };
+
+  if (elements.reloadUpdate) {
+    elements.reloadUpdate.addEventListener("click", () => {
+      if (!waitingWorker) return;
+      elements.reloadUpdate.disabled = true;
+      elements.reloadUpdate.textContent = "Reloading…";
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloadingForUpdate) return;
+        reloadingForUpdate = true;
+        window.location.reload();
+      }, { once:true });
+      waitingWorker.postMessage({ type:"SKIP_WAITING" });
+    });
+  }
+
+  window.addEventListener("load", () => {
+    if ("requestIdleCallback" in window) window.requestIdleCallback(registerServiceWorker, { timeout:2500 });
+    else window.setTimeout(registerServiceWorker, 750);
+  }, { once:true });
 }
