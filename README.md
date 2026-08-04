@@ -1,139 +1,168 @@
-# Casa del Jefe — Let It Ride Lounge v31
+# Casa del Jefe — Blackjack Salon
 
-A self-contained browser trainer for the standard Let It Ride paytable:
-1000 / 200 / 50 / 11 / 8 / 5 / 3 / 2 / 1 for royal flush through pair of tens or better.
+A mobile-friendly Progressive Web App built with plain HTML, CSS, and JavaScript.
 
 ## Modes
 
-- **Play**: three-unit bankroll simulation, full-hand accuracy, incorrect-decision review, and actual-vs-optimal bankroll chart.
-- **Train**: complete-hand practice with concise Correct/Incorrect feedback.
-- **Look Up**: three-card and four-card strategy lookup with plain-English explanations.
-- **El Jefe Challenge**: 200 complete hands; 196/200 passes and 200/200 earns Grand Master.
+- **Play:** full blackjack hands from a persistent six-deck shoe, with perfectly-played-hand accuracy, session mistake review, and an optimal-play bankroll comparison.
+- **Train:** complete-hand strategy practice. Accuracy is awarded only when every decision on a resolved hand is correct; split hands count separately. An optional filter limits initial deals to pairs and soft A-2 through A-9 hands.
+- **Look Up:** enter a dealer upcard and two player cards, or open the complete in-app basic-strategy tables.
+- **El Jefe Challenge:** 200 silent-scored completed hands; split hands count separately. At least 196 correct hands (98%) are required to pass, and a perfect 200 earns the Blackjack Grand Master certificate.
 
-Indifferent second-decision states accept either action as correct.
+## Rule profile
 
-## v15 update
+- Six decks
+- Dealer hits soft 17
+- Dealer peeks for blackjack
+- Double on any first two cards
+- Double after split
+- Split to a maximum of four hands
+- No resplitting aces
+- One card only to each split ace
+- No surrender
+- Blackjack pays 6:5
+- One-unit base wager in Play mode
+- Cut card randomized between 80% and 90% penetration
 
-- Centered the three-chip group beneath the player cards.
-- The middle `2` spot is directly below the middle player card, with `$` and `1` equally spaced on either side.
-- Kept the tighter horizontal action-button layout.
-- Added a very brief 120 ms transition lock after Decision 1 so a fast double-click cannot accidentally submit Decision 2.
+The in-app table and all gameplay decisions use the same H17, DAS, no-surrender strategy engine.
 
+## Session mistake review
 
-## v16 update
+Play mode records every incorrect hit, stand, double, or split decision, including decisions made after hitting or splitting. The review list is saved with the current session and is cleared by **Reset balance, history, and reshuffle**.
 
-- Reworked the Train table so the cream arc passes between the community and player cards.
-- Lowered the player cards slightly to match the Play table geometry.
-- Compressed the betting and feedback area so the New Hand button sits closer to the action.
+## Play graph
 
-Open `index.html` directly, or serve this directory from any static web host.
+Play mode tracks two cumulative balances:
 
+- **Your play:** green above zero and red below zero.
+- **Optimal play:** a gold counterfactual line.
 
-### v14 layout fix
-The middle betting chip is aligned at runtime to the center of the middle player card, making the layout consistent across browsers, zoom levels, and responsive widths. Static assets use versioned URLs to prevent stale hosted CSS or JavaScript.
+For each completed round, the app clones the remaining card order immediately after the initial deal and plays that round using basic strategy. The shadow round does not consume cards from the real shoe or affect later deals.
 
+## Test locally
 
-### v15 button hit-area fix
-The active Pull Back and Let It Ride controls are raised above neighboring chip columns, so every visible point inside either button responds to clicks and taps.
+Open PowerShell in this folder and run:
 
+`py -m http.server 8000`
 
-## v17 update
-
-- Tightened the three-chip rail at mobile widths while preserving exact center alignment beneath the middle player card.
-- Reduced the mobile action-button gap and width so the full Pull Back and Let It Ride controls remain inside the viewport, including on 320 px screens.
-
-## v18 update
-
-- Brought all three betting chips slightly closer to center.
-- Preserved exact alignment of the middle `2` chip beneath the middle player card.
-- Tightened mobile spacing further so the full decision controls remain on-screen.
-
-## v19 update
-
-- Widened the Pull Back and Let It Ride buttons after tightening the chip rail.
-- Preserved narrower responsive widths for small and very small phones.
-- Kept the middle chip anchored beneath the middle player card.
+Then open `http://localhost:8000`.
 
 
-## v20 update
+## Version 12 changes
 
-- Replaced the moving, per-chip action buttons with a fixed centered Blackjack-style button pair.
-- Added a moving upward arrow and “Choose decision 1/2” cue beneath the active removable chip.
-- Added red `P` and green `R` action symbols matching the strategy-guide language.
-- Kept the full button surfaces clickable and preserved the brief 120 ms transition lock.
-
-
-## v21 update
-
-- Corrected the physical wager order: Decision 1 now points to and removes the right-hand `1` chip.
-- Decision 2 then moves to and removes the middle `2` chip.
-- The left `$` chip remains mandatory throughout the hand.
-- Applied the corrected order consistently in Play, Train, and the El Jefe Challenge.
+- Removed the crest watermark from the El Jefe Challenge button.
+- Mounted the crest at the center of the castle masthead.
+- Restyled bankroll history and session mistake review in the dark Casa del Jefe palette.
+- Added the crest to the Return to Casa del Jefe link.
+- Updated chart colors for stronger contrast on the dark background.
+- Service-worker cache: `el-jefe-blackjack-v12`.
 
 
-## v22 update
+## Version 14 changes
 
-- Changed the decision cue text to white and centered it beneath the arrow.
-- Added a little more space between the arrow and the decision label.
-- Removed `(-3)` from the Deal and New Hand button labels.
-- Tightened the empty space between the decision controls and the Deal/New Hand button.
-- Added Enter-key support for dealing a hand in Play and starting a new hand in Train.
-- Made the masthead crest a link back to Casa del Jefe.
-
-
-## v23 update
-
-- Reserved a fixed-height result area in Play.
-- Final hand text no longer changes the table height, so the cards, chips, cream arc, and perspective lines stay perfectly still when the result appears.
+- Added the Casa del Jefe crest card backs.
+- Restyled the Complete Basic Strategy area in the black, emerald, cream, and gold Casa palette.
+- Made all strategy tables substantially more compact.
+- Removed unnecessary cell gridlines; the rounded action chips now carry the visual structure.
+- Reduced section spacing, labels, and row heights for better mobile fit.
+- Service-worker cache: `el-jefe-blackjack-v14`.
 
 
-## v24 update
+## Version 15 changes
 
-- Renamed the suited first-decision category to “Certain three-card straight flush draws.”
-- Uses “qualifying three-card straight flush draw” consistently in lookup explanations.
-- Renamed the first second-decision category to “Guaranteed winners” and lists its made hands beneath it.
-- Standardized visible labels to “First Decision” and “Second Decision.”
-- Rebuilt the Lookup card layout so the plus sign is centered exactly between the adjacent cards on desktop and centered both horizontally and vertically on mobile.
+- Keeps Hit, Stand, Double, and Split in fixed Play positions; unavailable choices become invisible without shifting the remaining buttons.
+- Rebuilds Train with the same right-side action rail and a New Hand button below the cards.
+- Combines session reset and incorrect-decision review into one full-width Session Review card.
+- Standardizes the widths of the table, bankroll chart, and session area.
+- Includes the Casa del Jefe crest card backs and compact dark Basic Strategy tables.
+- Service-worker cache: `el-jefe-blackjack-v15`.
 
+## Version 17 changes
 
-## v25 update
-
-- Shortened the lookup labels to **Player** and **Community**.
-- Enlarged and padded the lookup card container so its labels remain fully contained.
-- Raised the mobile plus sign slightly while keeping it horizontally centered.
-
-
-## v26 update
-
-Restored the Play accuracy feedback indicator. After each completed hand, a green `+` appears when both decisions were optimal and a red `−` appears when either decision was incorrect. The accuracy percentage remains hand-based and updates only after the hand is complete.
+- Places Hit and Stand in a fixed top row, with Double and Split in a fixed second row.
+- Unavailable actions remain invisible without shifting the other buttons.
+- Uses the same centered two-by-two action grid in Play and Train on desktop and mobile.
+- Keeps Deal and New Hand centered below the action grid.
+- Service-worker cache: `el-jefe-blackjack-v17`.
 
 
-## v27 update
+## Version 18 changes
 
-- Added an **Observational Plays** addendum at the bottom of Complete Optimal Strategy.
-- Documents first-decision deviations for T-J-Q, the other three-rank combinations from T/J/Q/K, and low pairs when complete opposing hands reveal no matching ranks.
-- Clarifies that the main guide assumes only the player's cards and community cards are known.
+- Centers the dealer cards, player cards, action grid, and Deal button within the full Blackjack felt.
+- Keeps the compact six-deck shoe overlaid at the left without shifting the main play area.
+- Retains the fixed two-by-two Hit/Stand and Double/Split layout in Play and Train.
+- Service-worker cache: `el-jefe-blackjack-v18`.
 
+## Version 19 changes
 
-## v29 update
-
-- Reserved a stable vertical-scrollbar gutter so Play, Train, and Look Up remain on the exact same horizontal centerline when switching modes.
-- Advanced cache-busting asset URLs and the service-worker cache to v29.
-
-
-## v30 update
-
-- Standardized Play statistics as Balance / Accuracy / Bet.
-- Moved Train statistics to the top of the felt as Hands / Accuracy.
-- Added the shared Training Room wordmark and retained the Casa del Jefe Hall of Masters Grand Master certificate.
-- Advanced cache-busting asset URLs and the service-worker cache to v30.
+- Reserves a fixed-height dealer-total/status slot in Play mode.
+- Prevents the dealer total appearing after the hole card is revealed from nudging the cards, action buttons, or Deal button.
+- Normal one-hit and stand hands remain stationary; genuine card wrapping can still increase the hand area as intended.
+- Service-worker cache: `el-jefe-blackjack-v19`.
 
 
-## v31 update
+## Version 20 changes
 
-- Allows vertical page scrolling when a touch gesture begins over the bankroll chart.
-- Uses a single scheduled chart redraw and skips redundant canvas reallocations.
-- Registers the service worker after the page is loaded and idle.
-- Lets a ready update wait without interrupting an active hand.
-- Adds a footer notice with **Reload Now** when a newer version is ready.
-- Uses cache-first repeat loading while quietly refreshing the cached app shell.
+- Play and Train action controls now mirror the Basic Strategy legend.
+- Each neutral action button contains the same color-coded letter badge used in the strategy tables: H, S, D, and P.
+- Fixed action positions and the two-row layout are unchanged.
+- Service-worker cache: `el-jefe-blackjack-v20`.
+
+## Version 21 changes
+
+- Added keyboard shortcuts for desktop and external-keyboard play.
+- **H**, **S**, **D**, and **P** activate Hit, Stand, Double, and Split only when the action is currently legal.
+- **Enter** deals or starts a new Play hand; in Train it advances after an answer.
+- The same H/S/D/P shortcuts also work during Train and the El Jefe Challenge.
+- Shortcuts reuse the actual on-screen buttons, so all availability checks, scoring, and mistake logging remain identical to mouse or touch input.
+- Service-worker cache: `el-jefe-blackjack-v21`.
+
+
+## Version 22 changes
+
+- Eliminated horizontal recentering when switching among Play, Train, and Look Up by reserving the scrollbar gutter.
+- Made the masthead crest link back to the Casa del Jefe home page.
+- Changed Play accuracy from per-decision scoring to the percentage of completed decision hands played perfectly; split rounds count as one hand and require every decision to be correct.
+- Moved the blackjack rule profile into a collapsible Game Rules & Details panel.
+- Simplified the Look Up card-area labels to Dealer and Player.
+- Service-worker cache: `el-jefe-blackjack-v22`.
+
+## Version 23 changes
+
+- El Jefe Challenge action buttons now use the same two-by-two labeled button design as Play.
+- Challenge keeps the same fixed action slots as Play, with unavailable Split hidden.
+- Service-worker cache: `el-jefe-blackjack-v23`.
+
+
+## Version 24 changes
+
+- Restyled the Blackjack table wordmark to match the Three Card Poker Club table.
+- Moved Play accuracy into a centered table-top bubble and centered the percentage under its label.
+- Changed the table statistic label from **Wager** to **Bet**.
+- Rebuilt Train mode around complete hands rather than first decisions. A hand receives credit only when every decision is correct.
+- Split and resplit results are scored as separate final hands, inheriting the accuracy of the decisions that created them.
+- Rebuilt the El Jefe Challenge as 200 completed hands with split hands counted separately; the 98% passing threshold remains 196 of 200.
+- Matched the perfect Blackjack Grand Master certificate to the Three Card Poker certificate design.
+- Service-worker cache: `el-jefe-blackjack-v24`.
+
+
+## Version 25 changes
+
+- Standardized the Play table statistics to the Pai Gow layout: **Balance / Accuracy / Bet** in one centered top panel.
+- Standardized the Train table statistics to **Hands / Accuracy** in one centered top panel.
+- Added the Training Room wordmark above the Train statistics for consistent table hierarchy.
+- Service-worker cache: `el-jefe-blackjack-v25`.
+
+## Version 26 changes
+
+- Allows normal vertical scrolling when a gesture begins over the bankroll chart.
+- Coalesces chart resize redraws and skips unchanged renders.
+- Delays service-worker registration until the page is idle.
+- Installs updates quietly and shows a footer notice instead of interrupting an active hand.
+- Adds **Reload Now** so the player chooses when a ready update activates.
+- Service-worker cache: `el-jefe-blackjack-v27`.
+
+
+## Version 27 consistency update
+
+Standardized bankroll history, Session Review outcomes, accuracy indicators, table naming, mobile chart behavior, and service-worker update detection.

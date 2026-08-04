@@ -6,253 +6,223 @@
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#07100d" name="theme-color"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
-<meta content="Let It Ride Lounge" name="apple-mobile-web-app-title"/>
-<title>Casa del Jefe — Let It Ride Lounge</title>
-<meta content="Exact optimal-strategy Let It Ride trainer with full-hand practice, bankroll tracking, lookup, and the El Jefe Challenge." name="description"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Blackjack Salon" name="apple-mobile-web-app-title"/>
+<title>Casa del Jefe — Blackjack Salon</title>
+<meta content="Full-hand blackjack strategy training, complete lookup tables, session mistake review, and the 200-hand El Jefe Challenge." name="description"/>
+<meta content="website" property="og:type"/>
+<meta content="Casa del Jefe — Blackjack Salon" property="og:title"/>
+<meta content="Full-hand blackjack strategy training, complete lookup tables, session mistake review, and the 200-hand El Jefe Challenge." property="og:description"/>
+<meta content="https://jliese916.github.io/BlackJackTrainer/" property="og:url"/>
+<meta content="https://jliese916.github.io/BlackJackTrainer/og-blackjack.png" property="og:image"/>
+<meta content="1200" property="og:image:width"/>
+<meta content="630" property="og:image:height"/>
+<meta content="Casa del Jefe Blackjack Salon trainer" property="og:image:alt"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Casa del Jefe — Blackjack Salon" name="twitter:title"/>
+<meta content="Full-hand blackjack strategy training, complete lookup tables, session mistake review, and the 200-hand El Jefe Challenge." name="twitter:description"/>
+<meta content="https://jliese916.github.io/BlackJackTrainer/og-blackjack.png" name="twitter:image"/>
 <link href="./manifest.webmanifest" rel="manifest"/>
 <link href="./favicon-64.png" rel="icon" type="image/png"/>
 <link href="./apple-touch-icon.png" rel="apple-touch-icon"/>
-<link href="./styles.css?v=31" rel="stylesheet"/>
+<link href="./styles.css?v=27" rel="stylesheet"/>
 </head>
 <body>
 <main class="app">
 <header class="castle-masthead">
-<div aria-hidden="true" class="castle-tower tower-left"><div class="tower-crenels"><i></i><i></i><i></i></div><span class="tower-suit heart">♥</span></div>
+<div aria-hidden="true" class="castle-tower tower-left">
+<div class="tower-crenels"><i></i><i></i><i></i></div>
+<span class="tower-suit spade">♠</span>
+</div>
 <div class="castle-hall">
 <div aria-hidden="true" class="hall-crenels"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 <a aria-label="Return to Casa del Jefe" class="masthead-crest-link" href="https://jliese916.github.io/">
 <img alt="" aria-hidden="true" class="masthead-crest" src="./jefe-crest.svg"/>
-</a>
-<div class="castle-kicker">Casa del Jefe</div>
-<h1>Let It Ride Lounge</h1>
-<details class="header-paytable" id="paytableDetails">
-<summary>Standard paytable · three equal starting bets</summary>
-<div aria-label="Let It Ride paytable" class="header-paytable-grid">
-<span>Royal Flush</span><strong>1000 to 1</strong>
-<span>Straight Flush</span><strong>200 to 1</strong>
-<span>Four of a Kind</span><strong>50 to 1</strong>
-<span>Full House</span><strong>11 to 1</strong>
-<span>Flush</span><strong>8 to 1</strong>
-<span>Straight</span><strong>5 to 1</strong>
-<span>Three of a Kind</span><strong>3 to 1</strong>
-<span>Two Pair</span><strong>2 to 1</strong>
-<span>Pair of Tens+</span><strong>1 to 1</strong>
+</a><div class="castle-kicker">Casa del Jefe</div>
+<h1>Blackjack Salon</h1>
+<details class="header-paytable game-details">
+<summary>Game Rules &amp; Details</summary>
+<div aria-label="Blackjack game rules" class="header-paytable-grid game-details-grid">
+<span>Decks</span><strong>6 Decks</strong>
+<span>Dealer check</span><strong>American Style (dealer peeks on Ace or face)</strong>
+<span>Soft 17</span><strong>Dealer Hits Soft 17</strong>
+<span>Doubling</span><strong>Double After Split Allowed</strong>
+<span>Surrender</span><strong>No Surrender</strong>
+<span>Blackjack</span><strong>Pays 6:5</strong>
 </div>
 </details>
 </div>
-<div aria-hidden="true" class="castle-tower tower-right"><div class="tower-crenels"><i></i><i></i><i></i></div><span class="tower-suit club">♣</span></div>
+<div aria-hidden="true" class="castle-tower tower-right">
+<div class="tower-crenels"><i></i><i></i><i></i></div>
+<span class="tower-suit heart">♥</span>
+</div>
 </header>
-<div class="challenge-launch"><button class="challenge-button" id="challengeLaunch" type="button"><span>Take the</span><strong>El Jefe Challenge</strong></button></div>
+<div class="challenge-launch">
+<button class="challenge-button" id="challengeLaunch" type="button">
+<span>TAKE THE</span>
+<strong>EL JEFE CHALLENGE</strong>
+</button>
+</div>
 <nav aria-label="App mode" class="mode-tabs" id="modeTabs">
-<button aria-selected="true" class="mode-tab active" data-mode="play" type="button">Play</button>
-<button aria-selected="false" class="mode-tab" data-mode="train" type="button">Train</button>
-<button aria-selected="false" class="mode-tab" data-mode="lookup" type="button">Look Up</button>
+<button class="mode-tab active" data-mode="play" type="button">Play</button>
+<button class="mode-tab" data-mode="train" type="button">Train</button>
+<button class="mode-tab" data-mode="lookup" type="button">Look Up</button>
 </nav>
-<section class="panel play-panel" id="playPanel">
-<div class="lir-table">
-<div aria-hidden="true" class="lir-table-marking">
-<svg viewBox="0 0 650 560" preserveAspectRatio="none" focusable="false">
-<path class="felt-wedge-fill" d="M104 210 C220 234 430 234 546 210 L634 560 L16 560 Z" fill="#f8efd0" fill-opacity="0.012"></path>
-<path class="felt-wedge-line" d="M-18 196 C170 232 480 232 668 196" fill="none" stroke="#f8efd0" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"></path>
-<path class="felt-wedge-line" d="M104 210 L16 560" fill="none" stroke="#f8efd0" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"></path>
-<path class="felt-wedge-line" d="M546 210 L634 560" fill="none" stroke="#f8efd0" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"></path>
-</svg>
+<section class="panel hidden" id="trainPanel">
+<p>Play each hand to completion. A hand counts as correct only when every decision is perfect; split hands count separately.</p>
+<label class="train-focus-toggle" for="trainFocusedHands">
+<input id="trainFocusedHands" type="checkbox"/>
+<span>
+<strong>Train only soft hands and pairs</strong>
+<small>Initial deals are limited to pairs or A-2 through A-9.</small>
+</span>
+</label>
+<div class="train-playfield">
+<div class="train-table-main">
+<div class="practice-table train-practice-table" id="trainTable">
+<div aria-label="Blackjack training room" class="mandalay-wordmark train-wordmark">
+<span>TRAINING ROOM</span>
+<small>PLAY EACH HAND PERFECTLY</small>
 </div>
-<div class="lir-wordmark"><span>CASA DEL JEFE</span><small>LET IT RIDE LOUNGE</small></div>
-<div aria-label="Play statistics" class="play-topline lir-topline">
-<div><small>Balance</small><strong id="playBalance">0 units</strong></div>
-<div class="play-accuracy-stat"><small>Accuracy</small><span class="play-accuracy-line"><strong id="playAccuracy">0.0%</strong><span aria-live="polite" class="play-decision-indicator" id="playDecisionIndicator"></span></span></div>
-<div><small>Bet</small><strong>3 units</strong></div>
+<div aria-label="Training statistics" class="train-score">
+<div><small>Hands</small><strong id="trainScoreText">0 / 0</strong></div>
+<div><small>Accuracy</small><strong id="trainPercent">0.0%</strong></div>
 </div>
-<div class="lir-zone community-zone">
-<div class="zone-label light">Community Cards</div>
-<div class="hand" id="playCommunity"></div>
+<div class="dealer-zone">
+<div class="zone-label">Dealer</div>
+<div class="hand" id="trainDealer"></div>
+<div class="practice-total" id="trainDealerTotal"></div>
 </div>
-<div class="lir-zone player-zone">
-<div class="zone-label light">Player Cards</div>
-<div class="hand" id="playPlayer"></div>
+<div class="practice-player-hands" id="trainHands"></div>
+<div aria-live="polite" class="feedback" id="trainFeedback"></div>
+<div aria-label="Training actions" class="blackjack-actions action-grid train-actions-grid" id="trainActions"></div>
+<button class="deal-button train-next-button" id="trainNext" type="button">New Hand</button>
 </div>
-<div aria-label="Three Let It Ride bets" class="bet-grid" id="playBets"></div>
-<div aria-live="polite" class="play-message lir-message" id="playMessage">Press Deal to begin.</div>
-<button class="deal-button table-hand-button" id="playDeal" type="button">Deal</button>
 </div>
-<section class="balance-chart-card">
-<div class="balance-chart-heading"><span>Bankroll history</span><small id="playChartSummary">0 completed hands</small></div>
-<div class="balance-chart-legend"><span><i class="legend-line legend-actual"></i>Your play</span><span><i class="legend-line legend-optimal"></i>Optimal play</span></div>
-<div class="chart-delta-pill" id="playDeltaSummary">Optimal − you: 0 units</div>
-<canvas aria-label="Line chart comparing your balance with optimal play" class="balance-chart" id="playBalanceChart" role="img"></canvas>
+</div>
 </section>
-<section aria-label="Session review and controls" class="session-hub">
-<div class="session-hub-heading"><div><strong>Session review</strong><small>Review every incorrect decision from this session.</small></div><button class="danger-link session-reset-button" id="resetPlay" type="button">Reset session</button></div>
-<details class="review-details session-review-list" id="playMistakesDetails"><summary>Incorrect decisions this session (<span id="playMistakeCount">0</span>)</summary><div class="play-missed-list" id="playMistakeList"></div></details>
-</section>
-</section>
-<section class="panel hidden train-panel" id="trainPanel">
-<div class="lir-table train-table">
-<div aria-hidden="true" class="lir-table-marking">
-<svg viewBox="0 0 650 560" preserveAspectRatio="none" focusable="false">
-<path class="felt-wedge-fill" d="M104 210 C220 234 430 234 546 210 L634 560 L16 560 Z" fill="#f8efd0" fill-opacity="0.012"></path>
-<path class="felt-wedge-line" d="M-18 196 C170 232 480 232 668 196" fill="none" stroke="#f8efd0" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"></path>
-<path class="felt-wedge-line" d="M104 210 L16 560" fill="none" stroke="#f8efd0" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"></path>
-<path class="felt-wedge-line" d="M546 210 L634 560" fill="none" stroke="#f8efd0" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"></path>
-</svg>
-</div>
-<div class="lir-wordmark"><span>TRAINING ROOM</span><small>PLAY THE HAND PERFECTLY</small></div>
-<div aria-label="Training statistics" class="train-score" id="trainScorePanel"><div><small>Hands</small><strong id="trainScore">0 / 0</strong></div><div><small>Accuracy</small><strong id="trainPercent">0.0%</strong></div></div>
-<div class="lir-zone community-zone"><div class="zone-label light">Community Cards</div><div class="hand" id="trainCommunity"></div></div>
-<div class="lir-zone player-zone"><div class="zone-label light">Player Cards</div><div class="hand" id="trainPlayer"></div></div>
-<div class="bet-grid" id="trainBets"></div>
-<div aria-live="polite" class="feedback lir-message" id="trainFeedback"></div>
-<button class="deal-button train-next-button table-hand-button" id="trainNew" type="button">New Hand</button>
-</div>
-<button class="link train-reset-link" id="resetTrain" type="button">Reset training score</button>
+<section class="train-score-controls hidden" id="trainScore">
+<button class="link-button" id="resetTrainScore" type="button">Reset accuracy</button>
 </section>
 <section class="panel hidden" id="lookupPanel">
-<p>Enter the visible cards.</p>
-<div aria-label="Visible Let It Ride cards" class="lir-lookup-layout">
-<div class="picker-label lookup-player-label">Player</div>
-<div class="picker-label lookup-community-label">Community</div>
-<div aria-label="Three-card player hand" class="hand lookup-hand lookup-player-hand" id="lookupPlayerHand"></div>
-<div aria-hidden="true" class="lookup-plus">+</div>
-<div aria-label="Optional revealed community card" class="hand lookup-hand lookup-community-hand" id="lookupCommunityHand"></div>
+<p>Choose the dealer's upcard and your two cards.</p>
+<div class="lookup-entry">
+<div class="lookup-targets">
+<button class="lookup-target active" id="lookupDealerTarget" type="button">
+<span class="lookup-target-label">Dealer</span>
+<span class="lookup-card-slots" id="lookupDealerSlot"></span>
+</button>
+<button class="lookup-target" id="lookupPlayerTarget" type="button">
+<span class="lookup-target-label">Player</span>
+<span class="lookup-card-slots" id="lookupPlayerSlots"></span>
+</button>
 </div>
-<div class="selection" id="lookupPrompt">Choose a rank for the first player card</div>
-<div class="picker-section"><div class="picker-label">Rank</div><div class="rank-picker" id="rankPicker"></div></div>
-<div class="picker-section"><div class="picker-label">Suit</div><div class="suit-picker" id="suitPicker"></div></div>
-<div class="actions lookup-actions"><button id="clearLookup" type="button">Clear</button></div>
-<div class="actions lookup-find-actions"><button class="primary" disabled="" id="findStrategy" type="button">Find Strategy</button></div>
-<div aria-live="polite" class="lookup-feedback" id="lookupFeedback"></div>
-<details class="strategy-ladder-details">
-<summary>Complete Optimal Strategy</summary>
-<div class="decision-ladder lir-strategy-guide">
-<div class="hero">
-<div class="eyebrow">Exact strategy · standard paytable</div>
-<h1>Let It Ride Decision Guide</h1>
-<p>Use the Ride, Either, and Pull categories below. In an indifferent state, either choice is optimal.</p>
-<div class="strategy-variables">In any situation, let <strong>s</strong> be the number of different five-card straights that could be completed using all visible ranks, and let <strong>h</strong> be the number of visible cards ranked ten or higher.</div>
+<div class="picker-label lookup-picker-label" id="lookupPickerLabel">Choose dealer card</div>
+<div class="rank-picker" id="lookupRankPicker"></div>
 </div>
-<section class="section">
-<div class="section-head"><h2>First Decision · three cards</h2><div class="section-sub">Decide whether the first removable bet stays in action.</div></div>
-<div class="made-grid">
-<div class="made-card">
-<h3><span class="badge auto">RIDE</span> Guaranteed winners</h3>
-<div class="key-text">Pair of tens or better, or three of a kind.</div>
-<div class="strategy-example-row"><div class="strategy-example-item"><div class="example-group"><span class="card suit-heart"><span class="card-rank">Q</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-club"><span class="card-rank">Q</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-spade"><span class="card-rank">4</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span></div><div class="strategy-example-caption">Pair of tens or better</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-heart"><span class="card-rank">7</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-club"><span class="card-rank">7</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-spade"><span class="card-rank">7</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span></div><div class="strategy-example-caption">Three of a kind</div></div></div>
-</div>
-<div class="made-card">
-<h3><span class="badge auto">RIDE</span> Certain three-card straight flush draws</h3>
-<div class="key-text">Qualifying three-card straight flush draws are three cards of the same suit such that:</div>
-<div class="formula">s + h ≥ 3</div>
-<div class="strategy-example-row"><div class="strategy-example-item"><div class="example-group"><span class="card suit-spade"><span class="card-rank">7</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-spade"><span class="card-rank">8</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-spade"><span class="card-rank">9</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span></div><div class="strategy-example-caption">s = 3, h = 0</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-heart"><span class="card-rank">9</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-heart"><span class="card-rank">10</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-heart"><span class="card-rank">J</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span></div><div class="strategy-example-caption">s = 3, h = 2</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">8</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-club"><span class="card-rank">9</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-club"><span class="card-rank">J</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span></div><div class="strategy-example-caption">s = 2, h = 1</div></div></div>
-</div>
-<div class="made-card pull-card">
-<h3><span class="badge pull">PULL</span> All other hands</h3>
-<div class="key-text">Any hand not in one of the above categories for this decision.</div>
-<div class="strategy-example-row"><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">4</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">7</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">K</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span></div></div></div>
-</div>
-</div>
-</section>
-<section class="section">
-<div class="section-head"><h2>Second Decision · four visible cards</h2><div class="section-sub">Decide whether the second removable bet stays in action.</div></div>
-<div class="made-grid">
-<div class="made-card">
-<h3><span class="badge auto">RIDE</span> Guaranteed winners</h3>
-<div class="key-text">Pair of tens or better, two pair, three of a kind, or four of a kind.</div>
-<div class="strategy-example-row"><div class="strategy-example-item"><div class="example-group"><span class="card suit-heart"><span class="card-rank">10</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-club"><span class="card-rank">10</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-spade"><span class="card-rank">4</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-diamond"><span class="card-rank">7</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span></div><div class="strategy-example-caption">Pair of tens or better</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-heart"><span class="card-rank">6</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-club"><span class="card-rank">6</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-spade"><span class="card-rank">K</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-diamond"><span class="card-rank">K</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span></div><div class="strategy-example-caption">Two pair</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">8</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">8</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-heart"><span class="card-rank">8</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-spade"><span class="card-rank">2</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span></div><div class="strategy-example-caption">Trips</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-heart"><span class="card-rank">A</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-club"><span class="card-rank">A</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">A</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">A</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span></div><div class="strategy-example-caption">Quads</div></div></div></div>
-<div class="made-card">
-<h3><span class="badge auto">RIDE</span> Four-card flush</h3>
-<div class="key-text">Any four visible cards of the same suit.</div>
-<div class="strategy-example-row"><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">2</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-club"><span class="card-rank">6</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-club"><span class="card-rank">J</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-club"><span class="card-rank">A</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span></div></div></div>
-</div>
-<div class="made-card">
-<h3><span class="badge auto">RIDE</span> Open-ended straight draw with a ten or higher</h3>
-<div class="key-text">Equivalently, <strong>4s + h &gt; 8</strong>.</div>
-<div class="strategy-example-row"><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">7</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">8</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">9</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-heart"><span class="card-rank">10</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span></div><div class="strategy-example-caption">7-8-9-T</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">10</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">J</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">Q</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-heart"><span class="card-rank">K</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span></div><div class="strategy-example-caption">T-J-Q-K</div></div></div>
-</div>
-<div class="made-card indifferent-card">
-<h3><span class="badge indifferent-badge">EITHER</span> Lower open-ended straight draw</h3>
-<div class="key-text">All four visible cards are 9 or lower. Equivalently, <strong>4s + h = 8</strong>.</div>
-<div class="strategy-example-row"><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">5</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">6</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">7</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-heart"><span class="card-rank">8</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span></div><div class="strategy-example-caption">5-6-7-8</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-heart"><span class="card-rank">6</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-club"><span class="card-rank">7</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">8</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">9</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span></div><div class="strategy-example-caption">6-7-8-9</div></div></div>
-</div>
-<div class="made-card indifferent-card">
-<h3><span class="badge indifferent-badge">EITHER</span> Inside Broadway draw</h3>
-<div class="key-text">T-J-Q-A, T-J-K-A, T-Q-K-A, or J-Q-K-A. Equivalently, <strong>4s + h = 8</strong>.</div>
-<div class="strategy-example-row"><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">10</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">J</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">Q</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-heart"><span class="card-rank">A</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span></div><div class="strategy-example-caption">T-J-Q-A</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">10</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">J</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">K</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-heart"><span class="card-rank">A</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span></div><div class="strategy-example-caption">T-J-K-A</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-heart"><span class="card-rank">10</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span><span class="card suit-club"><span class="card-rank">Q</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">K</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">A</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span></div><div class="strategy-example-caption">T-Q-K-A</div></div><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">J</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">Q</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">K</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-heart"><span class="card-rank">A</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span></div><div class="strategy-example-caption">J-Q-K-A</div></div></div>
-</div>
-<div class="made-card pull-card">
-<h3><span class="badge pull">PULL</span> All other hands</h3>
-<div class="key-text">Any hand not in one of the above categories for this decision.</div>
-<div class="strategy-example-row"><div class="strategy-example-item"><div class="example-group"><span class="card suit-club"><span class="card-rank">2</span><span class="card-suit card-suit-top">♣</span><span class="card-suit card-suit-bottom">♣</span></span><span class="card suit-diamond"><span class="card-rank">5</span><span class="card-suit card-suit-top">♦</span><span class="card-suit card-suit-bottom">♦</span></span><span class="card suit-spade"><span class="card-rank">8</span><span class="card-suit card-suit-top">♠</span><span class="card-suit card-suit-bottom">♠</span></span><span class="card suit-heart"><span class="card-rank">K</span><span class="card-suit card-suit-top">♥</span><span class="card-suit card-suit-bottom">♥</span></span></div></div></div>
-</div>
-</div>
-</section>
-<section class="section observational-section" aria-labelledby="observationalPlaysTitle">
-<div class="observational-panel">
-<div class="observational-heading">
-<div class="observational-kicker">Qualified basic-strategy addendum</div>
-<h2 id="observationalPlaysTitle">Observational Plays</h2>
-<p>The game is intended to be played using only your own cards and the community cards. The strategy above assumes exactly that. If complete player hands happen to be exposed, the extra information creates these first-decision exceptions.</p>
-</div>
-<div class="observational-grid">
-<article class="observational-card">
-<div class="observational-count"><strong>1</strong><span>exposed hand</span></div>
-<div class="observational-copy">
-<h3><span class="badge auto">RIDE</span> T-J-Q</h3>
-<p>Ride after seeing one complete three-card hand containing no ten, jack, or queen.</p>
-</div>
-</article>
-<article class="observational-card">
-<div class="observational-count"><strong>3</strong><span>exposed hands</span></div>
-<div class="observational-copy">
-<h3><span class="badge auto">RIDE</span> T-J-K, T-Q-K, or J-Q-K</h3>
-<p>Ride after seeing three complete hands containing none of the three ranks in your hand.</p>
-</div>
-</article>
-<article class="observational-card">
-<div class="observational-count"><strong>3</strong><span>exposed hands</span></div>
-<div class="observational-copy">
-<h3><span class="badge auto">RIDE</span> Pair of 2s through 9s</h3>
-<p>Ride after seeing three complete hands containing no card matching the rank of your pair.</p>
-</div>
-</article>
-</div>
-<div class="observational-note"><strong>Complete hands only.</strong> Partial hands do not provide the same information. These are first-decision deviations from the basic strategy above.</div>
-</div>
-</section>
-</div>
+<div aria-live="polite" class="lookup-result" id="lookupResult"></div>
+<button class="secondary-button" id="lookupClear" type="button">Clear cards</button>
+<details class="strategy-chart-details">
+<summary>Complete Basic Strategy Table</summary>
+<div class="strategy-table-container" id="strategyTableContainer"></div>
 </details>
+</section>
+<section class="panel play-panel" id="playPanel">
+<div class="mandalay-table">
+<div aria-label="Casa del Jefe blackjack table" class="mandalay-wordmark">
+<span>CASA DEL JEFE</span>
+<small>BLACKJACK</small>
+</div>
+<div aria-label="Play statistics" class="play-topline">
+<div><small>Balance</small><strong id="playBalance">0.0 units</strong></div>
+<div><small>Accuracy</small><span class="play-accuracy-line"><strong id="playAccuracy">0.0%</strong><span aria-live="polite" class="play-decision-indicator" id="playDecisionIndicator"></span></span></div>
+<div><small>Bet</small><strong>1 unit</strong></div>
+</div>
+<div class="table-layout">
+<aside aria-label="Six-deck shoe" class="table-left-rail">
+<div class="vertical-shoe-card">
+<div class="vertical-shoe-title">SIX-DECK SHOE</div>
+<div aria-label="Shoe penetration graphic" class="vertical-shoe-graphic">
+<div class="shoe-remaining" id="shoeRemaining"></div>
+<div class="shoe-cut" id="shoeCut" title="Cut card"></div>
+<div class="shoe-dealt" id="shoeDealt"></div>
+</div>
+<small id="shoeText">312 left</small>
+<div class="shoe-legend"><span class="yellow-mark"></span> Cut</div>
+</div>
+</aside>
+<div class="table-main">
+<div class="dealer-zone play-zone">
+<div class="zone-label light">Dealer</div>
+<div class="hand" id="playDealer"></div>
+<div class="table-total" id="dealerTotal"></div>
+</div>
+<div class="player-hands" id="playHands"></div>
+<div aria-live="polite" class="play-message" id="playMessage"></div>
+<div aria-label="Player actions" class="blackjack-actions play-actions action-grid play-actions-grid" id="playActions"></div>
+<button class="deal-button" id="dealButton" type="button">Deal</button>
+</div>
+</div>
+</div>
+<div class="balance-chart-card">
+<div class="balance-chart-heading"><span>BANKROLL HISTORY</span></div>
+<div class="balance-chart-legend">
+<span><i class="legend-line legend-actual"></i>Your play</span>
+<span><i class="legend-line legend-optimal"></i>Optimal play</span>
+</div>
+<div class="chart-delta-pill" id="playDeltaSummary">Optimal − you: 0</div>
+<canvas class="balance-chart" height="175" id="playBalanceChart" width="640"></canvas>
+</div>
+<section aria-label="Session review and controls" class="session-hub">
+<div class="session-hub-heading">
+<strong>SESSION REVIEW</strong>
+<button class="danger-link session-reset-button" id="resetPlay" type="button">Reset session</button>
+</div>
+<div class="session-stats" aria-label="Session outcomes">
+<div><small>Hands</small><strong id="playCompletedHands">0</strong></div>
+<div><small>Wins</small><strong id="playWins">0</strong></div>
+<div><small>Pushes</small><strong id="playPushes">0</strong></div>
+<div><small>Losses</small><strong id="playLosses">0</strong></div>
+</div>
+<details class="session-review-details session-review-list" id="playMistakesDetails">
+<summary>Incorrect decisions this session (<span id="playMistakeCount">0</span>)</summary>
+<div class="session-mistake-list" id="playMistakeList"></div>
+</details>
+</section>
 </section>
 <section class="panel challenge-panel hidden" id="challengePanel">
 <div id="challengeGame">
-<div class="challenge-heading-row"><div><div class="challenge-kicker">EL JEFE CHALLENGE</div><h2 id="challengeProgress">Hand 1 of 200</h2></div><button class="challenge-exit" id="challengeExit" type="button">Exit</button></div>
-<p>No feedback until the final score. You need 196 correct hands (98%) to pass.</p>
-<div class="lir-table train-table">
-<div aria-hidden="true" class="lir-table-marking">
-<svg viewBox="0 0 650 560" preserveAspectRatio="none" focusable="false">
-<path class="felt-wedge-fill" d="M104 210 C220 234 430 234 546 210 L634 560 L16 560 Z" fill="#f8efd0" fill-opacity="0.012"></path>
-<path class="felt-wedge-line" d="M-18 196 C170 232 480 232 668 196" fill="none" stroke="#f8efd0" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"></path>
-<path class="felt-wedge-line" d="M104 210 L16 560" fill="none" stroke="#f8efd0" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"></path>
-<path class="felt-wedge-line" d="M546 210 L634 560" fill="none" stroke="#f8efd0" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"></path>
-</svg>
+<div class="challenge-heading-row">
+<div>
+<div class="challenge-kicker">EL JEFE CHALLENGE</div>
+<h2 id="challengeProgress">Hand 1 of 200</h2>
 </div>
-<div class="lir-zone community-zone"><div class="zone-label light">Community Cards</div><div class="hand" id="challengeCommunity"></div></div>
-<div class="lir-zone player-zone"><div class="zone-label light">Player Cards</div><div class="hand" id="challengePlayer"></div></div>
-<div class="bet-grid" id="challengeBets"></div>
+<button class="challenge-exit" id="challengeExit" type="button">Exit</button>
+</div>
+<p>No feedback until the final score. Every resolved hand counts, and split hands count separately. You need 196 correct hands (98%) to pass.</p>
+<div class="practice-table challenge-practice-table">
+<div class="dealer-zone">
+<div class="zone-label">Dealer</div>
+<div class="hand" id="challengeDealer"></div>
+<div class="practice-total" id="challengeDealerTotal"></div>
+</div>
+<div class="practice-player-hands" id="challengeHands"></div>
+<div aria-label="Challenge actions" class="blackjack-actions action-grid challenge-actions-grid" id="challengeActions"></div>
 </div>
 </div>
 <div class="hidden" id="challengeSummary"></div>
+<div aria-live="polite" class="challenge-review hidden" id="challengeReview"></div>
 </section>
 <footer>
 <div class="footer-actions">
 <a class="footer-link" href="https://jliese916.github.io/"><img alt="" aria-hidden="true" src="./jefe-crest.svg"/>Return to Casa del Jefe</a>
 <div class="update-notice hidden" id="updateNotice" role="status" aria-live="polite">
-<span>A new version of Let It Ride is ready.</span>
+<span>A new version of Blackjack is ready.</span>
 <button class="update-button" id="reloadUpdate" type="button">Reload Now</button>
 </div>
 </div>
 </footer>
 </main>
-<script src="./strategy-engine.js?v=31"></script>
-<script defer="" src="./app.js?v=31"></script>
+<script defer="" src="./app.js?v=27"></script>
 </body>
 </html>

@@ -1,45 +1,51 @@
 "use strict";
 
-const CACHE = "casa-let-it-ride-v31";
-const ASSETS = [
+const BUILD_VERSION = "27";
+const CACHE_NAME = "el-jefe-blackjack-v27";
+const APP_SHELL = [
   "./index.html",
-  "./styles.css?v=31",
-  "./strategy-engine.js?v=31",
-  "./app.js?v=31",
+  "./styles.css?v=27",
+  "./app.js?v=27",
   "./manifest.webmanifest",
-  "./jefe-crest.svg",
-  "./favicon-64.png",
-  "./apple-touch-icon.png",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./apple-touch-icon.png",
+  "./og-blackjack.png",
+  "./favicon-64.png",
+  "./jefe-crest.svg"
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("message", event => {
-  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+  const data = event.data || {};
+  if (data.type === "GET_VERSION") {
+    const port = event.ports && event.ports[0];
+    if (port) port.postMessage({ version: BUILD_VERSION });
+    return;
+  }
+  if (data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 function cacheResponse(request, response, cacheKey = request) {
   if (!response || !response.ok) return response;
   const copy = response.clone();
-  caches.open(CACHE).then(cache => cache.put(cacheKey, copy)).catch(() => {});
+  caches.open(CACHE_NAME).then(cache => cache.put(cacheKey, copy)).catch(() => {});
   return response;
 }
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
-
   if (event.request.mode === "navigate") {
     event.respondWith(
       caches.match("./index.html").then(cached => {
@@ -51,7 +57,6 @@ self.addEventListener("fetch", event => {
     );
     return;
   }
-
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
