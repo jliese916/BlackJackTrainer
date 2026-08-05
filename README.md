@@ -160,9 +160,14 @@ Then open `http://localhost:8000`.
 - Delays service-worker registration until the page is idle.
 - Installs updates quietly and shows a footer notice instead of interrupting an active hand.
 - Adds **Reload Now** so the player chooses when a ready update activates.
-- Service-worker cache: `el-jefe-blackjack-v27`.
+- Service-worker cache: `el-jefe-blackjack-v28`.
 
 
 ## Version 27 consistency update
 
 Standardized bankroll history, Session Review outcomes, accuracy indicators, table naming, mobile chart behavior, and service-worker update detection.
+
+
+## Version 28 blackjack-label correction
+
+- Two-card 21 is displayed as **Blackjack**, never **Soft 21**, for dealer totals, player totals, lookup results, and mistake reviews.

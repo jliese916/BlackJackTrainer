@@ -7,7 +7,7 @@ const ACTION_LABELS = { hit:"Hit", stand:"Stand", double:"Double", split:"Split"
 const ACTION_SHORTCUTS = { hit:"H", stand:"S", double:"D", split:"P" };
 const TOTAL_CARDS = 312;
 const BASE_WAGER = 1;
-const APP_VERSION = "27";
+const APP_VERSION = "28";
 
 const $ = (selector) => document.querySelector(selector);
 const elements = {
@@ -154,6 +154,13 @@ function handInfo(cards) {
     bust: total > 21,
     blackjack: cards.length === 2 && total === 21
   };
+}
+
+function handTotalLabel(cards) {
+  const info = handInfo(cards);
+  if (info.bust) return `Bust (${info.total})`;
+  if (info.blackjack) return "Blackjack";
+  return `${info.soft ? "Soft " : ""}${info.total}`;
 }
 
 function sameRankPair(cards) {
@@ -363,8 +370,7 @@ function renderPracticeDealer(container, totalElement, round) {
   });
   if (totalElement) {
     if (revealHole) {
-      const info = handInfo(round.dealer);
-      totalElement.textContent = info.bust ? `Bust (${info.total})` : `${info.soft ? "Soft " : ""}${info.total}`;
+      totalElement.textContent = handTotalLabel(round.dealer);
     } else {
       totalElement.textContent = "";
     }
@@ -388,7 +394,7 @@ function renderPracticeHands(container, round) {
     const info = handInfo(hand.cards);
     const total = document.createElement("div");
     total.className = "practice-total";
-    total.textContent = info.bust ? `Bust (${info.total})` : `${info.soft && !info.bust ? "Soft " : ""}${info.total}`;
+    total.textContent = handTotalLabel(hand.cards);
 
     const outcome = document.createElement("div");
     outcome.className = "practice-hand-outcome";
@@ -711,8 +717,7 @@ function renderLookup() {
       cardFromRank(state.lookup.player[1], state.lookup.player[1] === state.lookup.player[0] ? 1 : 2)
     ];
     const action = strategyAction(player, dealer);
-    const info = handInfo(player);
-    elements.lookupResult.textContent = `${info.soft ? "Soft " : ""}${info.total}: ${ACTION_LABELS[action]}`;
+    elements.lookupResult.textContent = `${handTotalLabel(player)}: ${ACTION_LABELS[action]}`;
   } else {
     elements.lookupResult.textContent = "";
   }
@@ -1599,8 +1604,7 @@ function renderPlay() {
   });
   while (elements.playDealer.children.length < 2 && round.stage === "dealing") elements.playDealer.append(cardElement(0, { back:true }));
   if (["dealer","complete"].includes(round.stage)) {
-    const info = handInfo(round.dealer);
-    elements.dealerTotal.textContent = info.bust ? `Bust (${info.total})` : `${info.soft ? "Soft " : ""}${info.total}`;
+    elements.dealerTotal.textContent = handTotalLabel(round.dealer);
   }
 
   round.hands.forEach((hand, index) => {
@@ -1612,7 +1616,7 @@ function renderPlay() {
     const info = handInfo(hand.cards);
     const meta = document.createElement("div");
     meta.className = "hand-meta";
-    meta.textContent = `${round.hands.length > 1 ? `Hand ${index + 1} · ` : ""}${info.soft && !info.bust ? "Soft " : ""}${info.total || ""} · Bet ${formatUnits(hand.bet)}`;
+    meta.textContent = `${round.hands.length > 1 ? `Hand ${index + 1} · ` : ""}${handTotalLabel(hand.cards)} · Bet ${formatUnits(hand.bet)}`;
     const outcome = document.createElement("div");
     outcome.className = "hand-outcome";
     outcome.textContent = hand.outcome;
@@ -1725,9 +1729,8 @@ function renderChallengeSummary() {
 }
 
 function blackjackHandDescription(cards) {
-  const info = handInfo(cards);
   if (sameRankPair(cards)) return `Pair of ${RANKS[rankOf(cards[0])]}s`;
-  return `${info.soft ? "Soft " : ""}${info.total}`;
+  return handTotalLabel(cards);
 }
 
 function renderChallengeReview() {
